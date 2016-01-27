@@ -65,7 +65,7 @@ void WeaponsResource::Reset( void )
 //-----------------------------------------------------------------------------
 void WeaponsResource::LoadAllWeaponSprites( void )
 {
-/*	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
 	if ( !player )
 		return;
 
@@ -76,17 +76,15 @@ void WeaponsResource::LoadAllWeaponSprites( void )
 			LoadWeaponSprites( player->GetWeapon(i)->GetWeaponFileInfoHandle() );
 		}
 	}
-*/
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void WeaponsResource::LoadWeaponSprites( ITEM_FILE_INFO_HANDLE hWeaponFileInfo )
+void WeaponsResource::LoadWeaponSprites( WEAPON_FILE_INFO_HANDLE hWeaponFileInfo )
 {
-/*
 	// WeaponsResource is a friend of C_BaseCombatWeapon
-	FileItemInfo_t *pWeaponInfo = GetFileWeaponInfoFromHandle( hWeaponFileInfo );
+	FileWeaponInfo_t *pWeaponInfo = GetFileWeaponInfoFromHandle( hWeaponFileInfo );
 
 	if ( !pWeaponInfo )
 		return;
@@ -212,7 +210,6 @@ void WeaponsResource::LoadWeaponSprites( ITEM_FILE_INFO_HANDLE hWeaponFileInfo )
 	}
 
 	FreeHudTextureList( tempList );
-*/
 }
 
 //-----------------------------------------------------------------------------
@@ -220,7 +217,7 @@ void WeaponsResource::LoadWeaponSprites( ITEM_FILE_INFO_HANDLE hWeaponFileInfo )
 //-----------------------------------------------------------------------------
 CHudTexture *WeaponsResource::GetAmmoIconFromWeapon( int iAmmoId )
 {
-/*	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
 	if ( !player )
 		return NULL;
 
@@ -239,14 +236,15 @@ CHudTexture *WeaponsResource::GetAmmoIconFromWeapon( int iAmmoId )
 			return weapon->GetWpnData().iconAmmo2;
 		}
 	}
-*/
+
 	return NULL;
 }
 
-// BOXBOX redoing
-const FileItemInfo_t *WeaponsResource::GetWeaponFromAmmo( int iAmmoId )
+//-----------------------------------------------------------------------------
+// Purpose: Get a pointer to a weapon using this ammo
+//-----------------------------------------------------------------------------
+const FileWeaponInfo_t *WeaponsResource::GetWeaponFromAmmo( int iAmmoId )
 {
-/*
 	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
 	if ( !player )
 		return NULL;
@@ -259,14 +257,14 @@ const FileItemInfo_t *WeaponsResource::GetWeaponFromAmmo( int iAmmoId )
 
 		if ( weapon->GetPrimaryAmmoType() == iAmmoId )
 		{
-			return &weapon->GetItemData();
+			return &weapon->GetWpnData();
 		}
 		else if ( weapon->GetSecondaryAmmoType() == iAmmoId )
 		{
-			return &weapon->GetItemData();
+			return &weapon->GetWpnData();
 		}
 	}
-*/
+
 	return NULL;
 }
 

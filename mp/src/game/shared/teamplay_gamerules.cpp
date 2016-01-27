@@ -364,7 +364,7 @@ bool CTeamplayRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pA
 		}
 	}
 
-	return BaseClass::FPlayerCanTakeDamage( pPlayer, pAttacker );
+	return BaseClass::FPlayerCanTakeDamage( pPlayer, pAttacker, info );
 }
 
 //=========================================================

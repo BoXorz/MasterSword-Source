@@ -20,8 +20,6 @@
 #include "coordsize.h"
 #include "vphysics/performance.h"
 
-#include "MSS_shareddefs.h" // BOXBOX
-
 #ifdef CLIENT_DLL
 	#include "c_te_effect_dispatch.h"
 #else
@@ -1616,9 +1614,6 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	bDoServerEffects = false;
 #endif
 
-// BOXBOX removing
-/*
-
 #if defined( GAME_DLL )
 	if( IsPlayer() )
 	{
@@ -1641,7 +1636,6 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 		}
 	}
 #endif// GAME_DLL
-*/
 
 	int iPlayerDamage = info.m_iPlayerDamage;
 	if ( iPlayerDamage == 0 )

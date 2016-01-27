@@ -191,7 +191,7 @@ ConVar  sv_player_display_usercommand_errors( "sv_player_display_usercommand_err
 
 ConVar  player_debug_print_damage( "player_debug_print_damage", "0", FCVAR_CHEAT, "When true, print amount and type of all damage received by player to console." );
 
-/*
+
 void CC_GiveCurrentAmmo( void )
 {
 	CBasePlayer *pPlayer = UTIL_PlayerByIndex(1);
@@ -232,7 +232,7 @@ void CC_GiveCurrentAmmo( void )
 	}
 }
 static ConCommand givecurrentammo("givecurrentammo", CC_GiveCurrentAmmo, "Give a supply of ammo for current weapon..\n", FCVAR_CHEAT );
-*/
+
 
 // pl
 BEGIN_SIMPLE_DATADESC( CPlayerState )
@@ -442,6 +442,7 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetHealth", InputSetHealth ),
 	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "SetHUDVisibility", InputSetHUDVisibility ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "SetFogController", InputSetFogController ),
+	DEFINE_INPUTFUNC( FIELD_STRING, "HandleMapEvent", InputHandleMapEvent ),
 
 	DEFINE_FIELD( m_nNumCrouches, FIELD_INTEGER ),
 	DEFINE_FIELD( m_bDuckToggled, FIELD_BOOLEAN ),
@@ -584,7 +585,9 @@ CBasePlayer::CBasePlayer( )
 	m_bForceOrigin = false;
 	m_hVehicle = NULL;
 	m_pCurrentCommand = NULL;
-	
+	m_iLockViewanglesTickNumber = 0;
+	m_qangLockViewangles.Init();
+
 	// Setup our default FOV
 	m_iDefaultFOV = g_pGameRules->DefaultFOV();
 
@@ -634,6 +637,8 @@ CBasePlayer::CBasePlayer( )
 
 	m_flLastUserCommandTime = 0.f;
 	m_flMovementTimeForUserCmdProcessingRemaining = 0.0f;
+
+	m_flLastObjectiveTime = -1.f;
 }
 
 CBasePlayer::~CBasePlayer( )
@@ -911,7 +916,7 @@ void CBasePlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &v
 			// Prevent team damage here so blood doesn't appear
 			if ( info.GetAttacker()->IsPlayer() )
 			{
-				if ( !g_pGameRules->FPlayerCanTakeDamage( this, info.GetAttacker() ) )
+				if ( !g_pGameRules->FPlayerCanTakeDamage( this, info.GetAttacker(), info ) )
 					return;
 			}
 		}
@@ -973,7 +978,7 @@ void CBasePlayer::DamageEffect(float flDamage, int fDamageType)
 	}
 	else if (fDamageType & DMG_DROWN)
 	{
-		//Red damage indicator
+		//Blue damage indicator
 		color32 blue = {0,0,128,128};
 		UTIL_ScreenFade( this, blue, 1.0f, 0.1f, FFADE_IN );
 	}
@@ -1121,7 +1126,7 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	// go take the damage first
 
 	
-	if ( !g_pGameRules->FPlayerCanTakeDamage( this, info.GetAttacker() ) )
+	if ( !g_pGameRules->FPlayerCanTakeDamage( this, info.GetAttacker(), inputInfo ) )
 	{
 		// Refuse the damage
 		return 0;
@@ -1659,7 +1664,7 @@ void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	gamestats->Event_PlayerKilled( this, info );
 
-//	RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
+	RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
 
 #if defined( WIN32 ) && !defined( _X360 )
 	// NVNT set the drag to zero in the case of underwater death.
@@ -1682,12 +1687,12 @@ void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 		m_iHealth = 0;
 	}
 
-	/* BOXBOX don't want to holster weapon, want it to drop
+	// holster the current weapon
 	if ( GetActiveWeapon() )
 	{
 		GetActiveWeapon()->Holster();
 	}
-*/
+
 	SetAnimation( PLAYER_DIE );
 
 	if ( !IsObserver() )
@@ -2322,6 +2327,7 @@ bool CBasePlayer::SetObserverMode(int mode )
 			break;
 
 		case OBS_MODE_CHASE :
+		case OBS_MODE_POI: // PASSTIME
 		case OBS_MODE_IN_EYE :	
 			// udpate FOV and viewmodels
 			SetObserverTarget( m_hObserverTarget );	
@@ -2417,8 +2423,7 @@ void CBasePlayer::CheckObserverSettings()
 	}
 
 	// check if our spectating target is still a valid one
-	
-	if (  m_iObserverMode == OBS_MODE_IN_EYE || m_iObserverMode == OBS_MODE_CHASE || m_iObserverMode == OBS_MODE_FIXED )
+	if (  m_iObserverMode == OBS_MODE_IN_EYE || m_iObserverMode == OBS_MODE_CHASE || m_iObserverMode == OBS_MODE_FIXED || m_iObserverMode == OBS_MODE_POI )
 	{
 		ValidateCurrentObserverTarget();
 				
@@ -2472,6 +2477,7 @@ void CBasePlayer::ValidateCurrentObserverTarget( void )
 		}
 		else
 		{
+#if !defined( TF_DLL )
 			// couldn't find new target, switch to temporary mode
 			if ( mp_forcecamera.GetInt() == OBS_ALLOW_ALL )
 			{
@@ -2479,10 +2485,11 @@ void CBasePlayer::ValidateCurrentObserverTarget( void )
 				ForceObserverMode( OBS_MODE_ROAMING );
 			}
 			else
+#endif
 			{
 				// fix player view right where it is
 				ForceObserverMode( OBS_MODE_FIXED );
-				m_hObserverTarget.Set( NULL ); // no traget to follow
+				m_hObserverTarget.Set( NULL ); // no target to follow
 			}
 		}
 	}
@@ -2628,7 +2635,10 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 		Vector	dir, end;
 		Vector	start = target->EyePosition();
 		
-		AngleVectors( target->EyeAngles(), &dir );
+		QAngle ang = target->EyeAngles();
+		ang.z = 0; // PASSTIME no view roll when spectating ball
+
+		AngleVectors( ang, &dir );
 		VectorNormalize( dir );
 		VectorMA( start, -64.0f, dir, end );
 
@@ -2638,7 +2648,7 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 		trace_t	tr;
 		UTIL_TraceRay( ray, MASK_PLAYERSOLID, target, COLLISION_GROUP_PLAYER_MOVEMENT, &tr );
 
-		JumptoPosition( tr.endpos, target->EyeAngles() );
+		JumptoPosition( tr.endpos, ang );
 	}
 	
 	return true;
@@ -3311,7 +3321,8 @@ void CBasePlayer::PhysicsSimulate( void )
 	}
 #endif // _DEBUG
 
-	if ( int numUsrCmdProcessTicksMax = sv_maxusrcmdprocessticks.GetInt() )
+	int numUsrCmdProcessTicksMax = sv_maxusrcmdprocessticks.GetInt();
+	if ( gpGlobals->maxClients != 1 && numUsrCmdProcessTicksMax ) // don't apply this filter in SP games
 	{
 		// Grant the client some time buffer to execute user commands
 		m_flMovementTimeForUserCmdProcessingRemaining += TICK_INTERVAL;
@@ -3405,6 +3416,8 @@ void CBasePlayer::ForceSimulation()
 	m_nSimulationTick = -1;
 }
 
+ConVar sv_usercmd_custom_random_seed( "sv_usercmd_custom_random_seed", "1", FCVAR_CHEAT, "When enabled server will populate an additional random seed independent of the client" );
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *buf - 
@@ -3429,6 +3442,16 @@ void CBasePlayer::ProcessUsercmds( CUserCmd *cmds, int numcmds, int totalcmds,
 		if ( !IsUserCmdDataValid( pCmd ) )
 		{
 			pCmd->MakeInert();
+		}
+
+		if ( sv_usercmd_custom_random_seed.GetBool() )
+		{
+			float fltTimeNow = float( Plat_FloatTime() * 1000.0 );
+			pCmd->server_random_seed = *reinterpret_cast<int*>( (char*)&fltTimeNow );
+		}
+		else
+		{
+			pCmd->server_random_seed = pCmd->random_seed;
 		}
 
 		ctx->cmds.AddToTail( *pCmd );
@@ -4783,9 +4806,8 @@ CBaseEntity *CBasePlayer::EntSelectSpawnPoint()
 
 	player = edict();
 
-// BOXBOX reforming spawn points
-
-/*	if (g_pGameRules->IsCoOp())
+// choose a info_player_deathmatch point
+	if (g_pGameRules->IsCoOp())
 	{
 		pSpot = gEntList.FindEntityByClassname( g_pLastSpawn, "info_player_coop");
 		if ( pSpot )
@@ -4796,16 +4818,14 @@ CBaseEntity *CBasePlayer::EntSelectSpawnPoint()
 	}
 	else if ( g_pGameRules->IsDeathmatch() )
 	{
-*/
-	pSpot = g_pLastSpawn;
-	// Randomize the start spot
-	for ( int i = random->RandomInt(1,5); i > 0; i-- )
-		pSpot = gEntList.FindEntityByClassname( pSpot, "mss_spawnpoint" );
+		pSpot = g_pLastSpawn;
+		// Randomize the start spot
+		for ( int i = random->RandomInt(1,5); i > 0; i-- )
+			pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" );
+		if ( !pSpot )  // skip over the null point
+			pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" );
 
-	if ( !pSpot )  // skip over the null point
-		pSpot = gEntList.FindEntityByClassname( pSpot, "mss_spawnpoint" );
-
-	CBaseEntity *pFirstSpot = pSpot;
+		CBaseEntity *pFirstSpot = pSpot;
 
 		do 
 		{
@@ -4816,7 +4836,7 @@ CBaseEntity *CBasePlayer::EntSelectSpawnPoint()
 				{
 					if ( pSpot->GetLocalOrigin() == vec3_origin )
 					{
-						pSpot = gEntList.FindEntityByClassname( pSpot, "mss_spawnpoint" );
+						pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" );
 						continue;
 					}
 
@@ -4825,7 +4845,7 @@ CBaseEntity *CBasePlayer::EntSelectSpawnPoint()
 				}
 			}
 			// increment pSpot
-			pSpot = gEntList.FindEntityByClassname( pSpot, "mss_spawnpoint" );
+			pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" );
 		} while ( pSpot != pFirstSpot ); // loop if we're not back to the start
 
 		// we haven't found a place to spawn yet,  so kill any guy at the first spawn point and spawn there
@@ -4840,7 +4860,7 @@ CBaseEntity *CBasePlayer::EntSelectSpawnPoint()
 			}
 			goto ReturnSpot;
 		}
-//	}
+	}
 
 	// If startspot is set, (re)spawn there.
 	if ( !gpGlobals->startspot || !strlen(STRING(gpGlobals->startspot)))
@@ -4868,7 +4888,7 @@ ReturnSpot:
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Called the first time the player is created
+// Purpose: Called the first time the player's created
 //-----------------------------------------------------------------------------
 void CBasePlayer::InitialSpawn( void )
 {
@@ -5067,16 +5087,15 @@ void CBasePlayer::Precache( void )
 	PrecacheScriptSound( "Player.DrownContinue" );
 	PrecacheScriptSound( "Player.Wade" );
 	PrecacheScriptSound( "Player.AmbientUnderWater" );
-//	enginesound->PrecacheSentenceGroup( "HEV" ); // BOXBOX don't need this
+	enginesound->PrecacheSentenceGroup( "HEV" );
 
 	// These are always needed
-/* BOXBOX umm, no they're not.
 #ifndef TF_DLL
 	PrecacheParticleSystem( "slime_splash_01" );
 	PrecacheParticleSystem( "slime_splash_02" );
 	PrecacheParticleSystem( "slime_splash_03" );
 #endif
-*/
+
 	// in the event that the player JUST spawned, and the level node graph
 	// was loaded, fix all of the node graph pointers before the game starts.
 	
@@ -5658,8 +5677,8 @@ void CBloodSplat::Think( void )
 CBaseEntity	*CBasePlayer::GiveNamedItem( const char *pszName, int iSubType )
 {
 	// If I already own this type don't create one
-//	if ( Weapon_OwnsThisType(pszName, iSubType) )
-//		return NULL;
+	if ( Weapon_OwnsThisType(pszName, iSubType) )
+		return NULL;
 
 	// Msg( "giving %s\n", pszName );
 
@@ -5675,12 +5694,12 @@ CBaseEntity	*CBasePlayer::GiveNamedItem( const char *pszName, int iSubType )
 	pent->SetLocalOrigin( GetLocalOrigin() );
 	pent->AddSpawnFlags( SF_NORESPAWN );
 
-/*	CBaseCombatWeapon *pWeapon = dynamic_cast<CBaseCombatWeapon*>( (CBaseEntity*)pent );
+	CBaseCombatWeapon *pWeapon = dynamic_cast<CBaseCombatWeapon*>( (CBaseEntity*)pent );
 	if ( pWeapon )
 	{
 		pWeapon->SetSubType( iSubType );
 	}
-*/
+
 	DispatchSpawn( pent );
 
 	if ( pent != NULL && !(pent->IsMarkedForDeletion()) ) 
@@ -6559,7 +6578,7 @@ extern bool UTIL_ItemCanBeTouchedByPlayer( CBaseEntity *pItem, CBasePlayer *pPla
 //-----------------------------------------------------------------------------
 bool CBasePlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 {
-/*	CBaseCombatCharacter *pOwner = pWeapon->GetOwner();
+	CBaseCombatCharacter *pOwner = pWeapon->GetOwner();
 
 	// Can I have this weapon type?
 	if ( !IsAllowedToPickupWeapons() )
@@ -6607,19 +6626,17 @@ bool CBasePlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 			return false;
 		}
 	}
-
 	// -------------------------
 	// Otherwise take the weapon
 	// -------------------------
 	else 
 	{
-//		pWeapon->CheckRespawn();
-*/
+		pWeapon->CheckRespawn();
+
 		pWeapon->AddSolidFlags( FSOLID_NOT_SOLID );
 		pWeapon->AddEffects( EF_NODRAW );
 
 		Weapon_Equip( pWeapon );
-/*
 		if ( IsInAVehicle() )
 		{
 			pWeapon->Holster();
@@ -6648,9 +6665,8 @@ bool CBasePlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 			}
 #endif
 		}
-*/
 		return true;
-//	}
+	}
 }
 
 
@@ -7001,8 +7017,8 @@ float CBasePlayer::GetAutoaimScore( const Vector &eyePosition, const Vector &vie
 	float radiusSqr;
 	float targetRadius = pTarget->GetAutoAimRadius() * fScale;
 
-//	if( pActiveWeapon != NULL )
-//		targetRadius *= pActiveWeapon->WeaponAutoAimScale();
+	if( pActiveWeapon != NULL )
+		targetRadius *= pActiveWeapon->WeaponAutoAimScale();
 
 	float targetRadiusSqr = Square( targetRadius );
 
@@ -7149,7 +7165,7 @@ QAngle CBasePlayer::AutoaimDeflection( Vector &vecSrc, autoaim_params_t &params 
 				// If this entity is an NPC, only aim if it is an enemy.
 				if ( IRelationType( pEntity ) != D_HT )
 				{
-					if ( !pEntity->IsPlayer() /*&& !g_pGameRules->IsDeathmatch()*/ )
+					if ( !pEntity->IsPlayer() && !g_pGameRules->IsDeathmatch())
 						// Msg( "friend\n");
 						continue;
 				}
@@ -7177,7 +7193,7 @@ QAngle CBasePlayer::AutoaimDeflection( Vector &vecSrc, autoaim_params_t &params 
 			if( !(pEntity->GetFlags() & FL_FLY) )
 			{
 				// Refuse to take wild shots at targets far from reticle.
-				if( GetActiveWeapon() != NULL && dot < 0.99f )
+				if( GetActiveWeapon() != NULL && dot < GetActiveWeapon()->GetMaxAutoAimDeflection() )
 				{
 					// Be lenient if the player is looking down, though. 30 degrees through 90 degrees of pitch.
 					// (90 degrees is looking down at player's own 'feet'. Looking straight ahead is 0 degrees pitch.
@@ -7279,7 +7295,6 @@ void CBasePlayer::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecTar
 		bWasActiveWeapon = true;
 	}
 
-
 	if ( pWeapon )
 	{
 		if ( bWasActiveWeapon )
@@ -7309,7 +7324,7 @@ void CBasePlayer::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecTar
 //-----------------------------------------------------------------------------
 void CBasePlayer::Weapon_DropSlot( int weaponSlot )
 {
-/*	CBaseCombatWeapon *pWeapon;
+	CBaseCombatWeapon *pWeapon;
 
 	// Check for that slot being occupied already
 	for ( int i=0; i < MAX_WEAPONS; i++ )
@@ -7325,7 +7340,6 @@ void CBasePlayer::Weapon_DropSlot( int weaponSlot )
 			}
 		}
 	}
-*/
 }
 
 //-----------------------------------------------------------------------------
@@ -7334,7 +7348,7 @@ void CBasePlayer::Weapon_DropSlot( int weaponSlot )
 void CBasePlayer::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 {
 	BaseClass::Weapon_Equip( pWeapon );
-/*
+
 	bool bShouldSwitch = g_pGameRules->FShouldSwitchWeapon( this, pWeapon );
 
 #ifdef HL2_DLL
@@ -7350,7 +7364,6 @@ void CBasePlayer::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 	{
 		Weapon_Switch( pWeapon );
 	}
-*/
 }
 
 
@@ -7387,7 +7400,7 @@ void CBasePlayer::EquipWearable( CEconWearable *pItem )
 		pItem->Equip( this );
 	}
 
-#ifdef DEBUG
+#ifdef DBGFLAG_ASSERT
 	// Double check list integrity.
 	for ( int i = m_hMyWearables.Count()-1; i >= 0; --i )
 	{
@@ -7417,9 +7430,16 @@ void CBasePlayer::RemoveWearable( CEconWearable *pItem )
 			m_hMyWearables.Remove( i );
 			break;
 		}
+
+		// Integrety is failing, remove NULLs
+		if ( !pWearable )
+		{
+			m_hMyWearables.Remove( i );
+			break;
+		}
 	}
 
-#ifdef DEBUG
+#ifdef DBGFLAG_ASSERT
 	// Double check list integrity.
 	for ( int i = m_hMyWearables.Count()-1; i >= 0; --i )
 	{
@@ -7595,11 +7615,11 @@ void CStripWeapons::StripWeapons(inputdata_t &data, bool stripSuit)
 	{
 		pPlayer = (CBasePlayer *)data.pActivator;
 	}
-/*	else if ( !g_pGameRules->IsDeathmatch() ) // BOXBOX removing deathmatch references
+	else if ( !g_pGameRules->IsDeathmatch() )
 	{
 		pPlayer = UTIL_GetLocalPlayer();
 	}
-*/
+
 	if ( pPlayer )
 	{
 		pPlayer->RemoveAllItems( stripSuit );
@@ -7829,11 +7849,11 @@ void CMovementSpeedMod::InputSpeedMod(inputdata_t &data)
 	{
 		pPlayer = (CBasePlayer *)data.pActivator;
 	}
-/*	else if ( !g_pGameRules->IsDeathmatch() ) // BOXBOX removing deathmatch references
+	else if ( !g_pGameRules->IsDeathmatch() )
 	{
 		pPlayer = UTIL_GetLocalPlayer();
 	}
-*/
+
 	if ( pPlayer )
 	{
 		if ( data.value.Float() != 1.0f )
@@ -7872,7 +7892,7 @@ void CMovementSpeedMod::InputSpeedMod(inputdata_t &data)
 			// Bring the weapon back
 			if  ( HasSpawnFlags( SF_SPEED_MOD_SUPPRESS_WEAPONS ) && pPlayer->GetActiveWeapon() == NULL )
 			{
-				pPlayer->SetActiveWeapon( pPlayer->Weapon_GetLast() );
+				pPlayer->SetActiveWeapon( pPlayer->GetLastWeapon() );
 				if ( pPlayer->GetActiveWeapon() )
 				{
 					pPlayer->GetActiveWeapon()->Deploy();
@@ -8652,6 +8672,14 @@ void CBasePlayer::InputSetHealth( inputdata_t &inputdata )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CBasePlayer::InputHandleMapEvent( inputdata_t &inputdata )
+{
+	Internal_HandleMapEvent( inputdata );
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Hides or displays the HUD
 // Input  : &inputdata -
 //-----------------------------------------------------------------------------
@@ -8710,10 +8738,15 @@ void CBasePlayer::SetViewEntity( CBaseEntity *pEntity )
 	}
 }
 
-
+//-----------------------------------------------------------------------------
+// Purpose: Looks at the player's reserve ammo and also all his weapons for any ammo
+//			of the specified type
+// Input  : nAmmoIndex - ammo to look for
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
 bool CBasePlayer::HasAnyAmmoOfType( int nAmmoIndex )
 {
-/*	// Must be a valid index
+	// Must be a valid index
 	if ( nAmmoIndex < 0 )
 		return false;
 
@@ -8747,7 +8780,7 @@ bool CBasePlayer::HasAnyAmmoOfType( int nAmmoIndex )
 		}
 	}	
 
-*/
+	// We're completely without this type of ammo
 	return false;
 }
 
@@ -8935,8 +8968,27 @@ void CBasePlayer::HandleAnimEvent( animevent_t *pEvent )
 	BaseClass::HandleAnimEvent( pEvent );
 }
 
+
 //-----------------------------------------------------------------------------
-//  CPlayerInfo functions (simple passthroughts to get around the CBasePlayer multiple inheritence limitation)
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CBasePlayer::ShouldAnnounceAchievement( void )
+{
+	m_flAchievementTimes.AddToTail( gpGlobals->curtime );
+	if ( m_flAchievementTimes.Count() > 3 )
+	{
+		m_flAchievementTimes.Remove( 0 );
+		if ( m_flAchievementTimes.Tail() - m_flAchievementTimes.Head() <= 60.0 )
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+//  CPlayerInfo functions (simple pass-through to get around the CBasePlayer multiple inheritance limitation)
 //-----------------------------------------------------------------------------
 const char *CPlayerInfo::GetName()
 { 

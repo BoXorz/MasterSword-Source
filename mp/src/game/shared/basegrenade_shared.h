@@ -13,8 +13,6 @@
 
 #include "baseprojectile.h"
 
-#include "MSS_shareddefs.h" // BOXBOX
-
 #if defined( CLIENT_DLL )
 
 #define CBaseGrenade C_BaseGrenade

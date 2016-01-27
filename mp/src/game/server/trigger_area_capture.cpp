@@ -366,7 +366,7 @@ void CTriggerAreaCapture::CaptureThink( void )
 							}
 
 							iNumBlockablePlayers[iTeam] += TeamplayGameRules()->GetCaptureValueForPlayer( pPlayer );
-//							pPlayer->SetLastObjectiveTime( gpGlobals->curtime );
+							pPlayer->SetLastObjectiveTime( gpGlobals->curtime );
 						}
 						continue;
 					}
@@ -379,7 +379,7 @@ void CTriggerAreaCapture::CaptureThink( void )
 						}
 
 						iNumPlayers[iTeam] += TeamplayGameRules()->GetCaptureValueForPlayer( pPlayer );
-//						pPlayer->SetLastObjectiveTime( gpGlobals->curtime );
+						pPlayer->SetLastObjectiveTime( gpGlobals->curtime );
 					}
 				}
 			}
@@ -885,7 +885,7 @@ void CTriggerAreaCapture::EndCapture( int team )
 	// play any special cap sounds. need to do this before we update the owner of the point.
 	if ( TeamplayRoundBasedRules() )
 	{
-//		TeamplayRoundBasedRules()->PlaySpecialCapSounds( m_nOwningTeam, m_hPoint.Get() );
+		TeamplayRoundBasedRules()->PlaySpecialCapSounds( m_nOwningTeam, m_hPoint.Get() );
 	}
 
 	//there may have been more than one capper, but only report this one.

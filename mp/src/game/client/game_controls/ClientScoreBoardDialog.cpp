@@ -61,8 +61,7 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	SetMouseInputEnabled(false);
 
 	// set the scheme before any child control is created
-//	SetScheme("ClientScheme");
-	SetScheme("MSScheme"); // BOXBOX testing this
+	SetScheme("ClientScheme");
 
 	m_pPlayerList = new SectionedListPanel(this, "PlayerList");
 	m_pPlayerList->SetVerticalScrollbar(false);

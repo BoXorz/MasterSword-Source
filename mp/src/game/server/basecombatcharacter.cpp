@@ -54,8 +54,6 @@
 	#include "portal_shareddefs.h"
 #endif
 
-#include "MSS_player.h" // BOXBOX
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -63,7 +61,7 @@
 extern int	g_interactionBarnacleVictimReleased;
 #endif //HL2_DLL
 
-//extern ConVar weapon_showproficiency;
+extern ConVar weapon_showproficiency;
 
 ConVar ai_show_hull_attacks( "ai_show_hull_attacks", "0" );
 ConVar ai_force_serverside_ragdoll( "ai_force_serverside_ragdoll", "0" );
@@ -749,9 +747,6 @@ CBaseCombatCharacter::CBaseCombatCharacter( void )
 #ifdef GLOWS_ENABLE
 	m_bGlowEnabled.Set( false );
 #endif // GLOWS_ENABLE
-
-	m_nMSSLevelBase = 1; // BOXBOX for MSS
-	m_nMSSLevelModifier = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -1548,7 +1543,7 @@ bool CBaseCombatCharacter::BecomeRagdoll( const CTakeDamageInfo &info, const Vec
 #ifdef HL2_DLL	
 
 	bool bMegaPhyscannonActive = false;
-#if !defined( MSS )
+#if !defined( HL2MP )
 	bMegaPhyscannonActive = HL2GameRules()->MegaPhyscannonActive();
 #endif // !HL2MP
 
@@ -1685,15 +1680,6 @@ void CBaseCombatCharacter::Event_Killed( const CTakeDamageInfo &info )
 #ifdef GLOWS_ENABLE
 	RemoveGlowEffect();
 #endif // GLOWS_ENABLE
-
-
-// BOXBOX if attacker was MSS_Player, give exp!
-	CMSS_Player *pPlayer = ToMSSPlayer( info.GetAttacker() );
-	if( pPlayer )
-	{
-		pPlayer->AddToTotalExp( GetBaseMSSLevel() + GetMSSLevelModifier() );
-	}
-
 }
 
 void CBaseCombatCharacter::Event_Dying( const CTakeDamageInfo &info )
@@ -1919,8 +1905,6 @@ void CBaseCombatCharacter::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector
 	if ( !pWeapon )
 		return;
 
-/*	 BOXBOX don't need this
-
 	// If I'm an NPC, fill the weapon with ammo before I drop it.
 	if ( GetFlags() & FL_NPC )
 	{
@@ -1946,11 +1930,9 @@ void CBaseCombatCharacter::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector
 			pWeapon->AddEffects( EF_ITEM_BLINK );
 		}
 	}
-*/
+
 	if ( IsPlayer() )
 	{
-//		UTIL_CenterPrintAll( "Attempting Weapon Drop\n" ); // BOXBOX FIXED! (melee weapons wouldn't drop!)
-
 		Vector vThrowPos = Weapon_ShootPosition() - Vector(0,0,12);
 
 		if( UTIL_PointContents(vThrowPos) & CONTENTS_SOLID )
@@ -2105,7 +2087,7 @@ void CBaseCombatCharacter::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 	//  Give Primary Ammo
 	// ----------------------
 	// If gun doesn't use clips, just give ammo
-/*	if (pWeapon->GetMaxClip1() == -1)
+	if (pWeapon->GetMaxClip1() == -1)
 	{
 #ifdef HL2_DLL
 		if( FStrEq(STRING(gpGlobals->mapname), "d3_c17_09") && FClassnameIs(pWeapon, "weapon_rpg") && pWeapon->NameMatches("player_spawn_items") )
@@ -2142,11 +2124,11 @@ void CBaseCombatCharacter::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 		pWeapon->m_iClip2 = pWeapon->GetMaxClip2();
 		GiveAmmo( (pWeapon->GetDefaultClip2() - pWeapon->GetMaxClip2()), pWeapon->m_iSecondaryAmmoType); 
 	}
-*/
+
 	pWeapon->Equip( this );
 
 	// Players don't automatically holster their current weapon
-//	if ( IsPlayer() == false )
+	if ( IsPlayer() == false )
 	{
 		if ( m_hActiveWeapon )
 		{
@@ -2172,12 +2154,12 @@ void CBaseCombatCharacter::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 
 	WeaponProficiency_t proficiency;
 	proficiency = CalcWeaponProficiency( pWeapon );
-/*	
+	
 	if( weapon_showproficiency.GetBool() != 0 )
 	{
 		Msg("%s equipped with %s, proficiency is %s\n", GetClassname(), pWeapon->GetClassname(), GetWeaponProficiencyName( proficiency ) );
 	}
-*/
+
 	SetCurrentWeaponProficiency( proficiency );
 
 	// Pass the lighting origin over to the weapon if we have one
@@ -2191,7 +2173,7 @@ void CBaseCombatCharacter::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 bool CBaseCombatCharacter::Weapon_EquipAmmoOnly( CBaseCombatWeapon *pWeapon )
 {
 	// Check for duplicates
-/*	for (int i=0;i<MAX_WEAPONS;i++) 
+	for (int i=0;i<MAX_WEAPONS;i++) 
 	{
 		if ( m_hMyWeapons[i].Get() && FClassnameIs(m_hMyWeapons[i], pWeapon->GetClassname()) )
 		{
@@ -2227,7 +2209,7 @@ bool CBaseCombatCharacter::Weapon_EquipAmmoOnly( CBaseCombatWeapon *pWeapon )
 			return false;
 		}
 	}
-*/
+
 	return false;
 }
 
@@ -2238,14 +2220,13 @@ bool CBaseCombatCharacter::Weapon_EquipAmmoOnly( CBaseCombatWeapon *pWeapon )
 //-----------------------------------------------------------------------------
 bool CBaseCombatCharacter::Weapon_SlotOccupied( CBaseCombatWeapon *pWeapon )
 {
-/*
 	if ( pWeapon == NULL )
 		return false;
 
 	//Check to see if there's a resident weapon already in this slot
 	if ( Weapon_GetSlot( pWeapon->GetSlot() ) == NULL )
 		return false;
-*/
+
 	return true;
 }
 
@@ -2255,7 +2236,7 @@ bool CBaseCombatCharacter::Weapon_SlotOccupied( CBaseCombatWeapon *pWeapon )
 //-----------------------------------------------------------------------------
 CBaseCombatWeapon *CBaseCombatCharacter::Weapon_GetSlot( int slot ) const
 {
-/*	int	targetSlot = slot;
+	int	targetSlot = slot;
 
 	// Check for that slot being occupied already
 	for ( int i=0; i < MAX_WEAPONS; i++ )
@@ -2267,7 +2248,7 @@ CBaseCombatWeapon *CBaseCombatCharacter::Weapon_GetSlot( int slot ) const
 				return m_hMyWeapons[i];
 		}
 	}
-*/	
+	
 	return NULL;
 }
 
@@ -2276,7 +2257,6 @@ CBaseCombatWeapon *CBaseCombatCharacter::Weapon_GetSlot( int slot ) const
 //-----------------------------------------------------------------------------
 CBaseCombatWeapon *CBaseCombatCharacter::Weapon_GetWpnForAmmo( int iAmmoIndex )
 {
-/*
 	for ( int i = 0; i < MAX_WEAPONS; i++ )
 	{
 		CBaseCombatWeapon *weapon = GetWeapon( i );
@@ -2288,7 +2268,7 @@ CBaseCombatWeapon *CBaseCombatCharacter::Weapon_GetWpnForAmmo( int iAmmoIndex )
 		if ( weapon->GetSecondaryAmmoType() == iAmmoIndex )
 			return weapon;
 	}
-*/
+
 	return NULL;
 }
 
@@ -2300,8 +2280,8 @@ CBaseCombatWeapon *CBaseCombatCharacter::Weapon_GetWpnForAmmo( int iAmmoIndex )
 //-----------------------------------------------------------------------------
 bool CBaseCombatCharacter::Weapon_CanUse( CBaseCombatWeapon *pWeapon )
 {
-	acttable_t *pTable		= pWeapon->ActivityList();
-	int			actCount	= pWeapon->ActivityListCount();
+	int	actCount = 0;
+	acttable_t *pTable = pWeapon->ActivityList( actCount );
 
 	if( actCount < 1 )
 	{
@@ -2360,7 +2340,7 @@ void CBaseCombatCharacter::RemoveAllWeapons()
 	{
 		if ( m_hMyWeapons[i] )
 		{
-			m_hMyWeapons[i]->Kill( );
+			m_hMyWeapons[i]->Delete( );
 			m_hMyWeapons.Set( i, NULL );
 		}
 	}
@@ -2514,18 +2494,6 @@ int CBaseCombatCharacter::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			return 0;
 
 		m_iHealth -= flIntegerDamage;
-	}
-
-
-// BOXBOX If attacker is a player, add skills for hitting!
-	CMSS_Player *pPlayer = ToMSSPlayer( info.GetInflictor() );
-	if( pPlayer )
-	{
-		CBaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
-		if( ( pWeapon ) )
-		{
-			pPlayer->IncrementWeaponSkill( pWeapon->GetWeaponType() );
-		}
 	}
 
 	return 1;
@@ -3134,7 +3102,7 @@ void CBaseCombatCharacter::VPhysicsShadowCollision( int index, gamevcollisioneve
 	// which can occur owing to ordering issues it appears.
 	float flOtherAttackerTime = 0.0f;
 
-#if defined( HL2_DLL ) && !defined( MSS )
+#if defined( HL2_DLL ) && !defined( HL2MP )
 	if ( HL2GameRules()->MegaPhyscannonActive() == true )
 	{
 		flOtherAttackerTime = 1.0f;
@@ -3249,16 +3217,16 @@ void CBaseCombatCharacter::SetActiveWeapon( CBaseCombatWeapon *pNewWeapon )
 //-----------------------------------------------------------------------------
 Vector CBaseCombatCharacter::GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget )
 {
-//	if ( pWeapon )
-//		return pWeapon->GetBulletSpread(GetCurrentWeaponProficiency());
+	if ( pWeapon )
+		return pWeapon->GetBulletSpread(GetCurrentWeaponProficiency());
 	return VECTOR_CONE_15DEGREES;
 }
 
 //-----------------------------------------------------------------------------
 float CBaseCombatCharacter::GetSpreadBias( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget )
 {
-//	if ( pWeapon )
-//		return pWeapon->GetSpreadBias(GetCurrentWeaponProficiency());
+	if ( pWeapon )
+		return pWeapon->GetSpreadBias(GetCurrentWeaponProficiency());
 	return 1.0;
 }
 

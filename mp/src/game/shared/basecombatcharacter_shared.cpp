@@ -31,11 +31,11 @@ bool CBaseCombatCharacter::SwitchToNextBestWeapon(CBaseCombatWeapon *pCurrent)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Switches to the given weapon
+// Purpose: Switches to the given weapon (providing it has ammo)
 // Input  :
 // Output : true is switch succeeded
 //-----------------------------------------------------------------------------
-bool CBaseCombatCharacter::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex /*=0*/ )  // BOXBOX TODO remake/remove this
+bool CBaseCombatCharacter::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex /*=0*/ ) 
 {
 	if ( pWeapon == NULL )
 		return false;
@@ -47,13 +47,12 @@ bool CBaseCombatCharacter::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmo
 			return m_hActiveWeapon->Deploy( );
 		return false;
 	}
-/*
+
 	if (!Weapon_CanSwitchTo(pWeapon))
 	{
 		return false;
 	}
-*/
-	Warning("ATTEMPTING WEAPON SWITCH!\n");
+
 	if ( m_hActiveWeapon )
 	{
 		if ( !m_hActiveWeapon->Holster( pWeapon ) )
@@ -83,17 +82,31 @@ bool CBaseCombatCharacter::Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon )
 			return false;
 	}
 
-//	if ( !pWeapon->HasAnyAmmo() && !GetAmmoCount( pWeapon->m_iPrimaryAmmoType ) ) // BOBXOX removing ammo
-//		return false;
-
+	if ( !pWeapon->HasAnyAmmo() && !GetAmmoCount( pWeapon->m_iPrimaryAmmoType ) )
+		return false;
 
 	if ( !pWeapon->CanDeploy() )
 		return false;
 	
 	if ( m_hActiveWeapon )
 	{
-		if ( !m_hActiveWeapon->CanHolster() )
+		if ( !m_hActiveWeapon->CanHolster() && !pWeapon->ForceWeaponSwitch() )
 			return false;
+
+		if ( IsPlayer() )
+		{
+			CBasePlayer *pPlayer = (CBasePlayer *)this;
+			// check if active weapon force the last weapon to switch
+			if ( m_hActiveWeapon->ForceWeaponSwitch() )
+			{
+				// last weapon wasn't allowed to switch, don't allow to switch to new weapon
+				CBaseCombatWeapon *pLastWeapon = pPlayer->GetLastWeapon();
+				if ( pLastWeapon && pWeapon != pLastWeapon && !pLastWeapon->CanHolster() && !pWeapon->ForceWeaponSwitch() )
+				{
+					return false;
+				}
+			}
+		}
 	}
 
 	return true;
@@ -108,11 +121,14 @@ CBaseCombatWeapon *CBaseCombatCharacter::GetActiveWeapon() const
 	return m_hActiveWeapon;
 }
 
-
-void CBaseCombatCharacter::RemoveAmmo( int iCount, int iAmmoIndex ) // BOXBOX removing ammo /pun
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : iCount - 
+//			iAmmoIndex - 
+//-----------------------------------------------------------------------------
+void CBaseCombatCharacter::RemoveAmmo( int iCount, int iAmmoIndex )
 {
-/*
-	)	if (iCount <= 0)
+	if (iCount <= 0)
 		return;
 
 	// Infinite ammo?
@@ -121,31 +137,42 @@ void CBaseCombatCharacter::RemoveAmmo( int iCount, int iAmmoIndex ) // BOXBOX re
 
 	// Ammo pickup sound
 	m_iAmmo.Set( iAmmoIndex, MAX( m_iAmmo[iAmmoIndex] - iCount, 0 ) );
-*/
 }
 
-void CBaseCombatCharacter::RemoveAmmo( int iCount, const char *szName ) // BOXBOX removing ammo
+void CBaseCombatCharacter::RemoveAmmo( int iCount, const char *szName )
 {
-//	RemoveAmmo( iCount, GetAmmoDef()->Index(szName) );
+	RemoveAmmo( iCount, GetAmmoDef()->Index(szName) );
 }
 
-void CBaseCombatCharacter::RemoveAllAmmo( ) // BOXBOX removing ammo
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseCombatCharacter::RemoveAllAmmo( )
 {
-/*	for ( int i = 0; i < MAX_AMMO_SLOTS; i++ )
+	for ( int i = 0; i < MAX_AMMO_SLOTS; i++ )
 	{
 		m_iAmmo.Set( i, 0 );
 	}
-*/
 }
 
-void CBaseCombatCharacter::SetAmmoCount( int iCount, int iAmmoIndex ) // BOXBOX removing ammo
+//-----------------------------------------------------------------------------
+// FIXME: This is a sort of hack back-door only used by physgun!
+//-----------------------------------------------------------------------------
+void CBaseCombatCharacter::SetAmmoCount( int iCount, int iAmmoIndex )
 {
-//	m_iAmmo.Set( iAmmoIndex, iCount );
+	// NOTE: No sound, no max check! Seems pretty bogus to me!
+	m_iAmmo.Set( iAmmoIndex, iCount );
 }
 
-int CBaseCombatCharacter::GetAmmoCount( int iAmmoIndex ) const  // BOXBOX removing ammo
+//-----------------------------------------------------------------------------
+// Purpose: Returns the amount of ammunition of a particular type owned
+//			owned by the character
+// Input  :	Ammo Index
+// Output :	The amount of ammo
+//-----------------------------------------------------------------------------
+int CBaseCombatCharacter::GetAmmoCount( int iAmmoIndex ) const
 {
-/*	if ( iAmmoIndex == -1 )
+	if ( iAmmoIndex == -1 )
 		return 0;
 
 	// Infinite ammo?
@@ -153,14 +180,14 @@ int CBaseCombatCharacter::GetAmmoCount( int iAmmoIndex ) const  // BOXBOX removi
 		return 999;
 
 	return m_iAmmo[ iAmmoIndex ];
-*/
-	return 0; // BOXBOX
 }
 
-int	CBaseCombatCharacter::GetAmmoCount( char *szName ) const // BOXBOX removing ammo
+//-----------------------------------------------------------------------------
+// Purpose: Returns the amount of ammunition of the specified type the character's carrying
+//-----------------------------------------------------------------------------
+int	CBaseCombatCharacter::GetAmmoCount( char *szName ) const
 {
-//	return GetAmmoCount( GetAmmoDef()->Index(szName) );
-	return 0;
+	return GetAmmoCount( GetAmmoDef()->Index(szName) );
 }
 
 //-----------------------------------------------------------------------------
@@ -174,7 +201,7 @@ CBaseCombatWeapon* CBaseCombatCharacter::Weapon_OwnsThisType( const char *pszWea
 		if ( m_hMyWeapons[i].Get() && FClassnameIs( m_hMyWeapons[i], pszWeapon ) )
 		{
 			// Make sure it matches the subtype
-//			if ( m_hMyWeapons[i]->GetSubType() == iSubType )
+			if ( m_hMyWeapons[i]->GetSubType() == iSubType )
 				return m_hMyWeapons[i];
 		}
 	}

@@ -16,8 +16,6 @@
 #include "voice_common.h"
 #include "vgui_avatarimage.h"
 
-#include "MSS_shareddefs.h" // BOXBOX
-
 ConVar *sv_alltalk = NULL;
 
 //=============================================================================

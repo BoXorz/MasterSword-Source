@@ -22,7 +22,7 @@
 	#include "view.h"
 	#include "client_virtualreality.h"
 	#define CRecipientFilter C_RecipientFilter
-//	#include "headtrack/isourcevirtualreality.h"
+	#include "sourcevr/isourcevirtualreality.h"
 
 #else
 
@@ -342,7 +342,7 @@ Vector CBasePlayer::EyePosition( )
 #ifdef CLIENT_DLL
 		if ( IsObserver() )
 		{
-			if ( GetObserverMode() == OBS_MODE_CHASE )
+			if ( GetObserverMode() == OBS_MODE_CHASE || GetObserverMode() == OBS_MODE_POI )
 			{
 				if ( IsLocalPlayer() )
 				{
@@ -426,7 +426,7 @@ void CBasePlayer::CacheVehicleView( void )
 		// Get our view for this frame
 		pVehicle->GetVehicleViewPosition( nRole, &m_vecVehicleViewOrigin, &m_vecVehicleViewAngles, &m_flVehicleViewFOV );
 		m_nVehicleViewSavedFrame = gpGlobals->framecount;
-/*
+
 #ifdef CLIENT_DLL
 		if( UseVR() )
 		{
@@ -443,7 +443,6 @@ void CBasePlayer::CacheVehicleView( void )
 			}
 		}
 #endif
-*/
 	}
 }
 
@@ -706,7 +705,7 @@ void CBasePlayer::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, flo
 		if ( !CBaseEntity::GetParametersForSound( pSoundName, params, NULL ) )
 			return;
 
-		// Only cache if there's one option.  Otherwise we'd never hear any other sounds
+		// Only cache if there's one option.  Otherwise we'd never here any other sounds
 		if ( params.count == 1 )
 		{
 			m_StepSoundCache[ nSide ].m_usSoundNameIndex = stepSoundName;
@@ -863,14 +862,13 @@ bool CBasePlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex 
 
 void CBasePlayer::SelectLastItem(void)
 {
-/*	if ( m_hLastWeapon.Get() == NULL )
+	if ( m_hLastWeapon.Get() == NULL )
 		return;
 
 	if ( GetActiveWeapon() && !GetActiveWeapon()->CanHolster() )
 		return;
 
 	SelectItem( m_hLastWeapon.Get()->GetClassname(), m_hLastWeapon.Get()->GetSubType() );
-*/
 }
 
 
@@ -879,11 +877,10 @@ void CBasePlayer::SelectLastItem(void)
 //-----------------------------------------------------------------------------
 void CBasePlayer::AbortReload( void )
 {
-/*	if ( GetActiveWeapon() )
+	if ( GetActiveWeapon() )
 	{
 		GetActiveWeapon()->AbortReload();
 	}
-*/
 }
 
 #if !defined( NO_ENTITY_PREDICTION )
@@ -1038,7 +1035,7 @@ void CBasePlayer::SelectItem( const char *pstr, int iSubType )
 	// Make sure the current weapon can be holstered
 	if ( GetActiveWeapon() )
 	{
-		if ( !GetActiveWeapon()->CanHolster() )
+		if ( !GetActiveWeapon()->CanHolster() && !pItem->ForceWeaponSwitch() )
 			return;
 
 		ResetAutoaim( );
@@ -1545,12 +1542,11 @@ void CBasePlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, 
 
 	if ( !pVehicle )
 	{
-/*
 #if defined( CLIENT_DLL )
 		if( UseVR() )
 			g_ClientVirtualReality.CancelTorsoTransformOverride();
 #endif
-*/
+
 		if ( IsObserver() )
 		{
 			CalcObserverView( eyeOrigin, eyeAngles, fov );
@@ -1707,6 +1703,7 @@ void CBasePlayer::CalcObserverView( Vector& eyeOrigin, QAngle& eyeAngles, float&
 		case OBS_MODE_IN_EYE	:	CalcInEyeCamView( eyeOrigin, eyeAngles, fov );
 									break;
 
+		case OBS_MODE_POI		: // PASSTIME
 		case OBS_MODE_CHASE		:	CalcChaseCamView( eyeOrigin, eyeAngles, fov  );
 									break;
 

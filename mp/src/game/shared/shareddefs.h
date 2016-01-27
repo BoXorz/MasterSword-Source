@@ -522,8 +522,7 @@ typedef enum
 	USE_TOGGLE = 3
 } USE_TYPE;
 
-// BOXBOX commenting out
-/*
+// basic team colors
 #define COLOR_RED		Color(255, 64, 64, 255)
 #define COLOR_BLUE		Color(153, 204, 255, 255)
 #define COLOR_YELLOW	Color(255, 178, 0, 255)
@@ -531,7 +530,6 @@ typedef enum
 #define COLOR_GREY		Color(204, 204, 204, 255)
 #define COLOR_WHITE		Color(255, 255, 255, 255)
 #define COLOR_BLACK		Color(0, 0, 0, 255)
-*/
 
 // All NPCs need this data
 enum
@@ -548,9 +546,7 @@ enum
 	BLOOD_COLOR_ZOMBIE,			// FIXME: Move to Base HL2
 	BLOOD_COLOR_ANTLION_WORKER,
 #endif // HL2_EPISODIC
-
 };
-
 
 //-----------------------------------------------------------------------------
 // Vehicles may have more than one passenger.

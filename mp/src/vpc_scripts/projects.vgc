@@ -13,9 +13,10 @@ $Project "captioncompiler"
 	"utils\captioncompiler\captioncompiler.vpc" [$WIN32]
 }
 
+
 $Project "client"
 {
-	"game\client\client_MSS.vpc"		[($WIN32||$POSIX) && $MSS]
+	"game\client\client_hl2mp.vpc"		[($WIN32||$POSIX) && $HL2MP]
 }
 
 $Project "fgdlib"
@@ -40,7 +41,7 @@ $Project "height2normal"
 
 $Project "server"
 {
-	"game\server\server_MSS.vpc"		[($WIN32||$POSIX) && $MSS]
+	"game\server\server_hl2mp.vpc"		[($WIN32||$POSIX) && $HL2MP]
 }
 
 $Project "mathlib"

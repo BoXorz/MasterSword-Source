@@ -85,7 +85,8 @@ ConVar mp_show_voice_icons( "mp_show_voice_icons", "1", FCVAR_REPLICATED, "Show 
 
 #ifdef GAME_DLL
 
-ConVar tv_delaymapchange( "tv_delaymapchange", "0", 0, "Delays map change until broadcast is complete" );
+ConVar tv_delaymapchange( "tv_delaymapchange", "0", FCVAR_NONE, "Delays map change until broadcast is complete" );
+ConVar tv_delaymapchange_protect( "tv_delaymapchange_protect", "1", FCVAR_NONE, "Protect against doing a manual map change if HLTV is broadcasting and has not caught up with a major game event such as round_end" );
 
 ConVar mp_restartgame( "mp_restartgame", "0", FCVAR_GAMEDLL, "If non-zero, game will restart in the specified number of seconds" );
 ConVar mp_restartgame_immediate( "mp_restartgame_immediate", "0", FCVAR_GAMEDLL, "If non-zero, game will restart immediately" );
@@ -278,7 +279,7 @@ CMultiplayRules::CMultiplayRules()
 
 		if ( cfgfile && cfgfile[0] )
 		{
-			char szCommand[256];
+			char szCommand[MAX_PATH];
 
 			Log( "Executing dedicated server config file %s\n", cfgfile );
 			Q_snprintf( szCommand,sizeof(szCommand), "exec %s\n", cfgfile );
@@ -292,7 +293,7 @@ CMultiplayRules::CMultiplayRules()
 
 		if ( cfgfile && cfgfile[0] )
 		{
-			char szCommand[256];
+			char szCommand[MAX_PATH];
 
 			Log( "Executing listen server config file %s\n", cfgfile );
 			Q_snprintf( szCommand,sizeof(szCommand), "exec %s\n", cfgfile );
@@ -444,7 +445,8 @@ ConVarRef suitcharger( "sk_suitcharger" );
 	}
 
 
-/* BOXBOX don't need these
+	//=========================================================
+	//=========================================================
 	bool CMultiplayRules::IsDeathmatch( void )
 	{
 		return true;
@@ -456,13 +458,11 @@ ConVarRef suitcharger( "sk_suitcharger" );
 	{
 		return false;
 	}
-*/
 
 	//=========================================================
 	//=========================================================
 	bool CMultiplayRules::FShouldSwitchWeapon( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon )
 	{
-/*
 		if ( !pPlayer->Weapon_CanSwitchTo( pWeapon ) )
 		{
 			// Can't switch weapons for some reason.
@@ -491,19 +491,21 @@ ConVarRef suitcharger( "sk_suitcharger" );
 		{
 			return true;
 		}
-*/
+
 		return false;
 	}
 
+	//-----------------------------------------------------------------------------
+	// Purpose: Returns the weapon in the player's inventory that would be better than
+	//			the given weapon.
+	//-----------------------------------------------------------------------------
 	CBaseCombatWeapon *CMultiplayRules::GetNextBestWeapon( CBaseCombatCharacter *pPlayer, CBaseCombatWeapon *pCurrentWeapon )
 	{
-/*
 		CBaseCombatWeapon *pCheck;
 		CBaseCombatWeapon *pBest;// this will be used in the event that we don't find a weapon in the same category.
 
-//		int iCurrentWeight = -1;
-//		int iBestWeight = -1;// no weapon lower than -1 can be autoswitched to
-		int iCurrentBestWeight = -1;
+		int iCurrentWeight = -1;
+		int iBestWeight = -1;// no weapon lower than -1 can be autoswitched to
 		pBest = NULL;
 
 		// If I have a weapon, make sure I'm allowed to holster it
@@ -516,7 +518,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 				return NULL;
 			}
 
-			iCurrentBestWeight = pCurrentWeapon->GetWeight();
+			iCurrentWeight = pCurrentWeapon->GetWeight();
 		}
 
 		for ( int i = 0 ; i < pPlayer->WeaponCount(); ++i )
@@ -541,21 +543,18 @@ ConVarRef suitcharger( "sk_suitcharger" );
 					}
 				}
 			}
-			else
-			
-			if ( pCheck->GetWeight() > iCurrentBestWeight && pCheck != pCurrentWeapon )// don't reselect the weapon we're trying to get rid of
+			else if ( pCheck->GetWeight() > iBestWeight && pCheck != pCurrentWeapon )// don't reselect the weapon we're trying to get rid of
 			{
 				//Msg( "Considering %s\n", STRING( pCheck->GetClassname() );
 				// we keep updating the 'best' weapon just in case we can't find a weapon of the same weight
 				// that the player was using. This will end up leaving the player with his heaviest-weighted 
 				// weapon. 
-
-//				if ( pCheck->HasAnyAmmo() ) // BOXBOX removing ammo check!
-//				{
+				if ( pCheck->HasAnyAmmo() )
+				{
 					// if this weapon is useable, flag it as the best
-					iCurrentBestWeight = pCheck->GetWeight();
+					iBestWeight = pCheck->GetWeight();
 					pBest = pCheck;
-//				}
+				}
 			}
 		}
 
@@ -565,8 +564,6 @@ ConVarRef suitcharger( "sk_suitcharger" );
 		// if pBest is null, we didn't find ANYTHING. Shouldn't be possible- should always 
 		// at least get the crowbar, but ya never know.
 		return pBest;
-*/
-		return pCurrentWeapon; // BOXBOX TODO do we want to do anything with this?
 	}
 
 	//-----------------------------------------------------------------------------
@@ -645,7 +642,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 
 	//=========================================================
 	//=========================================================
-	bool CMultiplayRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker )
+	bool CMultiplayRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker, const CTakeDamageInfo &info )
 	{
 		return true;
 	}
@@ -757,20 +754,20 @@ ConVarRef suitcharger( "sk_suitcharger" );
 	{
 		DeathNotice( pVictim, info );
 
-		// BOXBOX commenting these out
-//		CBaseEntity *pInflictor = info.GetInflictor();
-//		CBaseEntity *pKiller = info.GetAttacker();
-//		CBasePlayer *pScorer = GetDeathScorer( pKiller, pInflictor, pVictim );
+		// Find the killer & the scorer
+		CBaseEntity *pInflictor = info.GetInflictor();
+		CBaseEntity *pKiller = info.GetAttacker();
+		CBasePlayer *pScorer = GetDeathScorer( pKiller, pInflictor, pVictim );
 		
-//		pVictim->IncrementDeathCount( 1 ); // BOXBOX don't need this
+		pVictim->IncrementDeathCount( 1 );
 
 		// dvsents2: uncomment when removing all FireTargets
 		// variant_t value;
 		// g_EventQueue.AddEvent( "game_playerdie", "Use", value, 0, pVictim, pVictim );
-//		FireTargets( "game_playerdie", pVictim, pVictim, USE_TOGGLE, 0 ); // BOXBOX commenting out
+		FireTargets( "game_playerdie", pVictim, pVictim, USE_TOGGLE, 0 );
 
-		// BOXBOX don't need this
-/*		if ( pVictim == pScorer )  
+		// Did the player kill himself?
+		if ( pVictim == pScorer )  
 		{			
 			if ( UseSuicidePenalty() )
 			{
@@ -799,7 +796,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 				pVictim->IncrementFragCount( -1 );
 			}					
 		}
-*/	}
+	}
 
 	//=========================================================
 	// Deathnotice. 
@@ -838,7 +835,11 @@ ConVarRef suitcharger( "sk_suitcharger" );
 						// If the inflictor is the killer,  then it must be their current weapon doing the damage
 						if ( pScorer->GetActiveWeapon() )
 						{
+#ifdef HL1MP_DLL
+							killer_weapon_name = pScorer->GetActiveWeapon()->GetClassname();
+#else
 							killer_weapon_name = pScorer->GetActiveWeapon()->GetDeathNoticeName();
+#endif
 						}
 					}
 					else
@@ -857,9 +858,9 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			{
 				killer_weapon_name += 7;
 			}
-			else if ( strncmp( killer_weapon_name, "NPC_", 8 ) == 0 )
+			else if ( strncmp( killer_weapon_name, "NPC_", 4 ) == 0 )
 			{
-				killer_weapon_name += 8;
+				killer_weapon_name += 4;
 			}
 			else if ( strncmp( killer_weapon_name, "func_", 5 ) == 0 )
 			{
@@ -874,7 +875,9 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			event->SetInt("attacker", killer_ID );
 			event->SetInt("customkill", info.GetDamageCustom() );
 			event->SetInt("priority", 7 );	// HLTV event priority, not transmitted
-			
+#ifdef HL1MP_DLL
+			event->SetString("weapon", killer_weapon_name );
+#endif			
 			gameeventmanager->FireEvent( event );
 		}
 
@@ -886,7 +889,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 	//=========================================================
 	float CMultiplayRules::FlWeaponRespawnTime( CBaseCombatWeapon *pWeapon )
 	{
-/*		if ( weaponstay.GetInt() > 0 )
+		if ( weaponstay.GetInt() > 0 )
 		{
 			// make sure it's only certain weapons
 			if ( !(pWeapon->GetWeaponFlags() & ITEM_FLAG_LIMITINWORLD) )
@@ -894,7 +897,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 				return gpGlobals->curtime + 0;		// weapon respawns almost instantly
 			}
 		}
-*/
+
 		return gpGlobals->curtime + WEAPON_RESPAWN_TIME;
 	}
 
@@ -909,7 +912,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 	//=========================================================
 	float CMultiplayRules::FlWeaponTryRespawn( CBaseCombatWeapon *pWeapon )
 	{
-/*		if ( pWeapon && (pWeapon->GetWeaponFlags() & ITEM_FLAG_LIMITINWORLD) )
+		if ( pWeapon && (pWeapon->GetWeaponFlags() & ITEM_FLAG_LIMITINWORLD) )
 		{
 			if ( gEntList.NumberOfEntities() < (gpGlobals->maxEntities - ENTITY_INTOLERANCE) )
 				return 0;
@@ -917,7 +920,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			// we're past the entity tolerance level,  so delay the respawn
 			return FlWeaponRespawnTime( pWeapon );
 		}
-*/
+
 		return 0;
 	}
 
@@ -950,7 +953,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 	//=========================================================
 	bool CMultiplayRules::CanHavePlayerItem( CBasePlayer *pPlayer, CBaseCombatWeapon *pItem )
 	{
-/*		if ( weaponstay.GetInt() > 0 )
+		if ( weaponstay.GetInt() > 0 )
 		{
 			if ( pItem->GetWeaponFlags() & ITEM_FLAG_LIMITINWORLD )
 				return BaseClass::CanHavePlayerItem( pPlayer, pItem );
@@ -964,7 +967,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 				}
 			}
 		}
-*/
+
 		return BaseClass::CanHavePlayerItem( pPlayer, pItem );
 	}
 
@@ -1147,19 +1150,22 @@ ConVarRef suitcharger( "sk_suitcharger" );
 		}
 	}
 
-	void StripChar(char *szBuffer, const char cWhiteSpace )
+	// Strip ' ' and '\n' characters from string.
+	static void StripWhitespaceChars( char *szBuffer )
 	{
+		char *szOut = szBuffer;
 
-		while ( char *pSpace = strchr( szBuffer, cWhiteSpace ) )
+		for ( char *szIn = szOut; *szIn; szIn++ )
 		{
-			char *pNextChar = pSpace + sizeof(char);
-			V_strcpy( pSpace, pNextChar );
+			if ( *szIn != ' ' && *szIn != '\r' )
+				*szOut++ = *szIn;
 		}
+		*szOut = '\0';
 	}
 
 	void CMultiplayRules::GetNextLevelName( char *pszNextMap, int bufsize, bool bRandom /* = false */ )
 	{
-		char mapcfile[256];
+		char mapcfile[MAX_PATH];
 		DetermineMapCycleFilename( mapcfile, sizeof(mapcfile), false );
 
 		// Check the time of the mapcycle file and re-populate the list of level names if the file has been modified
@@ -1177,10 +1183,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			// If map cycle file has changed or this is the first time through ...
 			if ( m_nMapCycleTimeStamp != nMapCycleTimeStamp )
 			{
-				// Reset map index and map cycle timestamp
-				m_nMapCycleTimeStamp = nMapCycleTimeStamp;
-				m_nMapCycleindex = 0;
-
+				// Reload
 				LoadMapCycleFile();
 			}
 		}
@@ -1204,7 +1207,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 
 	void CMultiplayRules::DetermineMapCycleFilename( char *pszResult, int nSizeResult, bool bForceSpew )
 	{
-		static char szLastResult[ 256];
+		static char szLastResult[ MAX_PATH ];
 
 		const char *pszVar = mapcyclefile.GetString();
 		if ( *pszVar == '\0' )
@@ -1218,7 +1221,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			return;
 		}
 
-		char szRecommendedName[ 256 ];
+		char szRecommendedName[ MAX_PATH ];
 		V_sprintf_safe( szRecommendedName, "cfg/%s", pszVar );
 
 		// First, look for a mapcycle file in the cfg directory, which is preferred
@@ -1269,7 +1272,12 @@ ConVarRef suitcharger( "sk_suitcharger" );
 		}
 	}
 
-	void CMultiplayRules::LoapMapCycleFileIntoVector( const char *pszMapCycleFile, CUtlVector<char *> &mapList )
+	void CMultiplayRules::LoadMapCycleFileIntoVector( const char *pszMapCycleFile, CUtlVector<char *> &mapList )
+	{
+		CMultiplayRules::RawLoadMapCycleFileIntoVector( pszMapCycleFile, mapList );
+	}
+
+	void CMultiplayRules::RawLoadMapCycleFileIntoVector( const char *pszMapCycleFile, CUtlVector<char *> &mapList )
 	{
 		CUtlBuffer buf;
 		if ( !filesystem->ReadFile( pszMapCycleFile, "GAME", buf ) )
@@ -1281,20 +1289,12 @@ ConVarRef suitcharger( "sk_suitcharger" );
 		{
 			bool bIgnore = false;
 
-			// Strip out the spaces in the name
-			StripChar( mapList[i] , '\r');
-			StripChar( mapList[i] , ' ');
+			// Strip out ' ' and '\r' chars.
+			StripWhitespaceChars( mapList[i] );
 
 			if ( !Q_strncmp( mapList[i], "//", 2 ) || mapList[i][0] == '\0' )
 			{
 				bIgnore = true;
-			}
-			else if ( !engine->IsMapValid( mapList[i] ) )
-			{
-				bIgnore = true;
-
-				// If the engine doesn't consider it a valid map remove it from the lists
-				Warning( "Invalid map '%s' included in map cycle file. Ignored.\n", mapList[i] );
 			}
 
 			if ( bIgnore )
@@ -1317,6 +1317,27 @@ ConVarRef suitcharger( "sk_suitcharger" );
 		mapList.RemoveAll();
 	}
 
+	bool CMultiplayRules::IsManualMapChangeOkay( const char **pszReason )
+	{
+		if ( HLTVDirector()->IsActive() && ( HLTVDirector()->GetDelay() >= HLTV_MIN_DIRECTOR_DELAY ) )
+		{
+			if ( tv_delaymapchange.GetBool() && tv_delaymapchange_protect.GetBool() )
+			{
+				float flLastEvent = GetLastMajorEventTime();
+				if ( flLastEvent > -1 )
+				{
+					if ( flLastEvent > ( gpGlobals->curtime - ( HLTVDirector()->GetDelay() + 3 ) ) ) // +3 second delay to prevent instant change after a major event
+					{
+						*pszReason = "\n***WARNING*** Map change blocked. HLTV is broadcasting and has not caught up to the last major game event yet.\nYou can disable this check by setting the value of the server convar \"tv_delaymapchange_protect\" to 0.\n";
+						return false;
+					}
+				}
+			}
+		}
+
+		return true;
+	}
+
 	bool CMultiplayRules::IsMapInMapCycle( const char *pszName )
 	{
 		for ( int i = 0; i < m_MapList.Count(); i++ )
@@ -1334,7 +1355,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 	{
 		char szNextMap[MAX_MAP_NAME];
 
-		if ( nextlevel.GetString() && *nextlevel.GetString() && engine->IsMapValid( nextlevel.GetString() ) )
+		if ( nextlevel.GetString() && *nextlevel.GetString() )
 		{
 			Q_strncpy( szNextMap, nextlevel.GetString(), sizeof( szNextMap ) );
 		}
@@ -1349,13 +1370,19 @@ ConVarRef suitcharger( "sk_suitcharger" );
 
 	void CMultiplayRules::LoadMapCycleFile( void )
 	{
-		char mapcfile[256];
+		int nOldCycleIndex = m_nMapCycleindex;
+		m_nMapCycleindex = 0;
+
+		char mapcfile[MAX_PATH];
 		DetermineMapCycleFilename( mapcfile, sizeof(mapcfile), false );
 
 		FreeMapCycleFileVector( m_MapList );
 
+		const int nMapCycleTimeStamp = filesystem->GetPathTime( mapcfile, "GAME" );
+		m_nMapCycleTimeStamp = nMapCycleTimeStamp;
+
 		// Repopulate map list from mapcycle file
-		LoapMapCycleFileIntoVector( mapcfile, m_MapList );
+		LoadMapCycleFileIntoVector( mapcfile, m_MapList );
 
 		// Load server's mapcycle into network string table for client-side voting
 		if ( g_pStringTableServerMapCycle )
@@ -1462,16 +1489,29 @@ ConVarRef suitcharger( "sk_suitcharger" );
 		}
 #endif
 
-		// If the current map selection is in the list, set m_nMapCycleindex to the map that follows it.
-		for ( int i = 0; i < m_MapList.Count(); i++ )
+		// If the current map is in the same location in the new map cycle, keep that index. This gives better behavior
+		// when reloading a map cycle that has the current map in it multiple times.
+		int nOldPreviousMap = ( nOldCycleIndex == 0 ) ? ( m_MapList.Count() - 1 ) : ( nOldCycleIndex - 1 );
+		if ( nOldCycleIndex >= 0 && nOldCycleIndex < m_MapList.Count() &&
+		     nOldPreviousMap >= 0 && nOldPreviousMap < m_MapList.Count() &&
+		     V_strcmp( STRING( gpGlobals->mapname ), m_MapList[ nOldPreviousMap ] ) == 0 )
 		{
-			if ( V_strcmp( STRING( gpGlobals->mapname ), m_MapList[i] ) == 0 )
+			// The old index is still valid, and falls after our current map in the new cycle, use it
+			m_nMapCycleindex = nOldCycleIndex;
+		}
+		else
+		{
+			// Otherwise, if the current map selection is in the list, set m_nMapCycleindex to the map that follows it.
+			for ( int i = 0; i < m_MapList.Count(); i++ )
 			{
-				m_nMapCycleindex = i;
-				IncrementMapCycleIndex();
-				break;
+				if ( V_strcmp( STRING( gpGlobals->mapname ), m_MapList[i] ) == 0 )
+				{
+					m_nMapCycleindex = i;
+					IncrementMapCycleIndex();
+					break;
+				}
 			}
-		}		
+		}
 	}
 
 	void CMultiplayRules::ChangeLevelToMap( const char *pszMap )
@@ -1552,7 +1592,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 
 		Msg( "Skipping: %s\tNext map: %s\n", szSkippedMap, szNextMap );
 
-		if ( nextlevel.GetString() && *nextlevel.GetString() && engine->IsMapValid( nextlevel.GetString() ) )
+		if ( nextlevel.GetString() && *nextlevel.GetString() )
 		{
 			Msg( "Warning! \"nextlevel\" is set to \"%s\" and will override the next map to be played.\n", nextlevel.GetString() );
 		}
@@ -1619,10 +1659,6 @@ ConVarRef suitcharger( "sk_suitcharger" );
 
 					pPlayer->OnAchievementEarned( nAchievementID );
 				}
-			}
-			else if ( FStrEq( pszCommand, "SendServerMapCycle" ) )
-			{
-				LoadMapCycleFile();	
 			}
 		}
 	}
@@ -1749,6 +1785,37 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			}
 
 			pPlayer->SpeakConceptIfAllowed( iConcept, modifiers );
+		}
+	}
+
+	void CMultiplayRules::RandomPlayersSpeakConceptIfAllowed( int iConcept, int iNumRandomPlayer /*= 1*/, int iTeam /*= TEAM_UNASSIGNED*/, const char *modifiers /*= NULL*/ )
+	{
+		CUtlVector< CBaseMultiplayerPlayer* > speakCandidates;
+
+		CBaseMultiplayerPlayer *pPlayer;
+		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+		{
+			pPlayer = ToBaseMultiplayerPlayer( UTIL_PlayerByIndex( i ) );
+
+			if ( !pPlayer )
+				continue;
+
+			if ( iTeam != TEAM_UNASSIGNED )
+			{
+				if ( pPlayer->GetTeamNumber() != iTeam )
+					continue;
+			}
+
+			speakCandidates.AddToTail( pPlayer );
+		}
+
+		int iSpeaker = iNumRandomPlayer;
+		while ( iSpeaker > 0 && speakCandidates.Count() > 0 )
+		{
+			int iRandomSpeaker = RandomInt( 0, speakCandidates.Count() - 1 );
+			speakCandidates[ iRandomSpeaker ]->SpeakConceptIfAllowed( iConcept, modifiers );
+			speakCandidates.FastRemove( iRandomSpeaker );
+			iSpeaker--;
 		}
 	}
 

@@ -31,13 +31,15 @@
 #include "te_effect_dispatch.h"
 #include "globals.h"
 #include "nav_mesh.h"
-// #include "team.h" // BOXBOX removing teams
+#include "team.h"
 #include "datacache/imdlcache.h"
 #include "basemultiplayerplayer.h"
 #include "voice_gamemgr.h"
 
-#include "MSS_player.h"
-
+#ifdef TF_DLL
+#include "tf_player.h"
+#include "tf_gamerules.h"
+#endif
 
 #ifdef HL2_DLL
 #include "weapon_physcannon.h"
@@ -54,6 +56,60 @@ extern CBaseEntity*	FindPickerEntity( CBasePlayer* pPlayer );
 extern bool IsInCommentaryMode( void );
 
 ConVar  *sv_cheats = NULL;
+
+enum eAllowPointServerCommand {
+	eAllowNever,
+	eAllowOfficial,
+	eAllowAlways
+};
+
+#ifdef TF_DLL
+// The default value here should match the default of the convar
+eAllowPointServerCommand sAllowPointServerCommand = eAllowOfficial;
+#else
+eAllowPointServerCommand sAllowPointServerCommand = eAllowAlways;
+#endif // TF_DLL
+
+void sv_allow_point_servercommand_changed( IConVar *pConVar, const char *pOldString, float flOldValue )
+{
+	ConVarRef var( pConVar );
+	if ( !var.IsValid() )
+	{
+		return;
+	}
+
+	const char *pNewValue = var.GetString();
+	if ( V_strcasecmp ( pNewValue, "always" ) == 0 )
+	{
+		sAllowPointServerCommand = eAllowAlways;
+	}
+#ifdef TF_DLL
+	else if ( V_strcasecmp ( pNewValue, "official" ) == 0 )
+	{
+		sAllowPointServerCommand = eAllowOfficial;
+	}
+#endif // TF_DLL
+	else
+	{
+		sAllowPointServerCommand = eAllowNever;
+	}
+}
+
+ConVar sv_allow_point_servercommand ( "sv_allow_point_servercommand",
+#ifdef TF_DLL
+                                      // The default value here should match the default of the convar
+                                      "official",
+#else
+                                      // Other games may use this in their official maps, and only TF exposes IsValveMap() currently
+                                      "always",
+#endif // TF_DLL
+                                      FCVAR_NONE,
+                                      "Allow use of point_servercommand entities in map. Potentially dangerous for untrusted maps.\n"
+                                      "  disallow : Always disallow\n"
+#ifdef TF_DLL
+                                      "  official : Allowed for valve maps only\n"
+#endif // TF_DLL
+                                      "  always   : Allow for all maps", sv_allow_point_servercommand_changed );
 
 void ClientKill( edict_t *pEdict, const Vector &vecForce, bool bExplode = false )
 {
@@ -93,10 +149,8 @@ char * CheckChatText( CBasePlayer *pPlayer, char *text )
 // say blah blah blah
 // or as
 // blah blah blah
-
-// BOXBOX remaking this, taking teams out
-
-void Host_Say( edict_t *pEdict, const CCommand &args/*, bool teamonly*/ )
+//
+void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 {
 	CBasePlayer *client;
 	int		j;
@@ -104,7 +158,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args/*, bool teamonly*/ )
 	char	text[256];
 	char    szTemp[256];
 	const char *cpSay = "say";
-//	const char *cpSayTeam = "say_team";
+	const char *cpSayTeam = "say_team";
 	const char *pcmd = args[0];
 	bool bSenderDead = false;
 
@@ -112,7 +166,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args/*, bool teamonly*/ )
 	if ( args.ArgC() == 0 )
 		return;
 
-	if ( !stricmp( pcmd, cpSay)/* || !stricmp( pcmd, cpSayTeam )*/ )
+	if ( !stricmp( pcmd, cpSay) || !stricmp( pcmd, cpSayTeam ) )
 	{
 		if ( args.ArgC() >= 2 )
 		{
@@ -174,9 +228,9 @@ void Host_Say( edict_t *pEdict, const CCommand &args/*, bool teamonly*/ )
 	const char *pszLocation = NULL;
 	if ( g_pGameRules )
 	{
-		pszFormat = g_pGameRules->GetChatFormat( /*teamonly,*/ pPlayer );
-		pszPrefix = g_pGameRules->GetChatPrefix( /*teamonly,*/ pPlayer );	
-		pszLocation = g_pGameRules->GetChatLocation( /*teamonly,*/ pPlayer );
+		pszFormat = g_pGameRules->GetChatFormat( teamonly, pPlayer );
+		pszPrefix = g_pGameRules->GetChatPrefix( teamonly, pPlayer );	
+		pszLocation = g_pGameRules->GetChatLocation( teamonly, pPlayer );
 	}
 
 	const char *pszPlayerName = pPlayer ? pPlayer->GetPlayerName():"Console";
@@ -222,8 +276,8 @@ void Host_Say( edict_t *pEdict, const CCommand &args/*, bool teamonly*/ )
 		if ( !(client->IsNetClient()) )	// Not a client ? (should never be true)
 			continue;
 
-//		if ( teamonly && g_pGameRules->PlayerCanHearChat( client, pPlayer ) != GR_TEAMMATE )
-//			continue;
+		if ( teamonly && g_pGameRules->PlayerCanHearChat( client, pPlayer ) != GR_TEAMMATE )
+			continue;
 
 		if ( pPlayer && !client->CanHearAndReadChatFrom( pPlayer ) )
 			continue;
@@ -270,23 +324,23 @@ void Host_Say( edict_t *pEdict, const CCommand &args/*, bool teamonly*/ )
 	int userid = 0;
 	const char *networkID = "Console";
 	const char *playerName = "Console";
-//	const char *playerTeam = "Console";
+	const char *playerTeam = "Console";
 	if ( pPlayer )
 	{
 		userid = pPlayer->GetUserID();
 		networkID = pPlayer->GetNetworkIDString();
 		playerName = pPlayer->GetPlayerName();
-/*		CTeam *team = pPlayer->GetTeam();
+		CTeam *team = pPlayer->GetTeam();
 		if ( team )
 		{
 			playerTeam = team->GetName();
 		}
-*/	}
+	}
 		
-/*	if ( teamonly )
+	if ( teamonly )
 		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" say_team \"%s\"\n", playerName, userid, networkID, playerTeam, p );
 	else
-*/		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" say \"%s\"\n", playerName, userid, networkID, /*playerTeam,*/ p );
+		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" say \"%s\"\n", playerName, userid, networkID, playerTeam, p );
 
 	IGameEvent * event = gameeventmanager->CreateEvent( "player_say", true );
 
@@ -311,9 +365,9 @@ void ClientPrecache( void )
 	CBaseEntity::PrecacheModel( "sprites/purpleglow1.vmt" );	
 	CBaseEntity::PrecacheModel( "sprites/purplelaser1.vmt" );	
 	
-#ifndef MSS
+#ifndef HL2MP
 	CBaseEntity::PrecacheScriptSound( "Hud.Hint" );
-#endif
+#endif // HL2MP
 	CBaseEntity::PrecacheScriptSound( "Player.FallDamage" );
 	CBaseEntity::PrecacheScriptSound( "Player.Swim" );
 
@@ -330,8 +384,8 @@ void ClientPrecache( void )
 	CBaseEntity::PrecacheScriptSound( "Bounce.Flesh" );
 	CBaseEntity::PrecacheScriptSound( "Bounce.Wood" );
 	CBaseEntity::PrecacheScriptSound( "Bounce.Shrapnel" );
-//	CBaseEntity::PrecacheScriptSound( "Bounce.ShotgunShell" ); // BOXBOX don't need these
-//	CBaseEntity::PrecacheScriptSound( "Bounce.Shell" );
+	CBaseEntity::PrecacheScriptSound( "Bounce.ShotgunShell" );
+	CBaseEntity::PrecacheScriptSound( "Bounce.Shell" );
 	CBaseEntity::PrecacheScriptSound( "Bounce.Concrete" );
 
 	ClientGamePrecache();
@@ -569,7 +623,22 @@ void CPointServerCommand::InputCommand( inputdata_t& inputdata )
 	if ( !inputdata.value.String()[0] )
 		return;
 
-	engine->ServerCommand( UTIL_VarArgs( "%s\n", inputdata.value.String() ) );
+	bool bAllowed = ( sAllowPointServerCommand == eAllowAlways );
+#ifdef TF_DLL
+	if ( sAllowPointServerCommand == eAllowOfficial )
+	{
+		bAllowed = TFGameRules() && TFGameRules()->IsValveMap();
+	}
+#endif // TF_DLL
+
+	if ( bAllowed )
+	{
+		engine->ServerCommand( UTIL_VarArgs( "%s\n", inputdata.value.String() ) );
+	}
+	else
+	{
+		Warning( "point_servercommand usage blocked by sv_allow_point_servercommand setting\n" );
+	}
 }
 
 BEGIN_DATADESC( CPointServerCommand )
@@ -600,7 +669,7 @@ void CC_DrawLine( const CCommand &args )
 static ConCommand drawline("drawline", CC_DrawLine, "Draws line between two 3D Points.\n\tGreen if no collision\n\tRed is collides with something\n\tArguments: x1 y1 z1 x2 y2 z2", FCVAR_CHEAT);
 
 //------------------------------------------------------------------------------
-// Purpose : Draw a cross at a points.  
+// Purpose : Draw a cross at a points.
 // Input   :
 // Output  :
 //------------------------------------------------------------------------------
@@ -754,7 +823,7 @@ CON_COMMAND( say, "Display player message" )
 	{
 		if (( pPlayer->LastTimePlayerTalked() + TALK_INTERVAL ) < gpGlobals->curtime) 
 		{
-			Host_Say( pPlayer->edict(), args/*, 0*/ ); // BOXBOX removing teams
+			Host_Say( pPlayer->edict(), args, 0 );
 			pPlayer->NotePlayerTalked();
 		}
 	}
@@ -764,12 +833,13 @@ CON_COMMAND( say, "Display player message" )
 	// text via a script.  This can be exploited to flood everyone off.
 	else if ( UTIL_GetCommandClientIndex() == 0 )
 	{
-		Host_Say( NULL, args/*, 0*/ );
+		Host_Say( NULL, args, 0 );
 	}
 }
 
 
-/* BOXBOX removing teams
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 CON_COMMAND( say_team, "Display player message to team" )
 {
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
@@ -782,24 +852,12 @@ CON_COMMAND( say_team, "Display player message to team" )
 		}
 	}
 }
-*/
 
-//BOXBOX redoing this
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 CON_COMMAND( give, "Give item to player.\n\tArguments: <item_name>" )
 {
-	CMSS_Player *pPlayer = ToMSSPlayer( UTIL_GetCommandClient() );
-
-	if( ( pPlayer ) && ( args.ArgC() == 2 ) && ( sv_cheats->GetBool() ) )
-	{
-		char item_to_give[ 256 ];
-		Q_strncpy( item_to_give, args[1], sizeof( item_to_give ) );
-		Q_strlower( item_to_give );
-
-		string_t iszItem = AllocPooledString( item_to_give );	// Make a copy of the classname
-		pPlayer->GiveNamedItem( STRING(iszItem) );
-	}
-
-/*
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
 	if ( pPlayer 
 		&& (gpGlobals->maxClients == 1 || sv_cheats->GetBool()) 
@@ -809,10 +867,34 @@ CON_COMMAND( give, "Give item to player.\n\tArguments: <item_name>" )
 		Q_strncpy( item_to_give, args[1], sizeof( item_to_give ) );
 		Q_strlower( item_to_give );
 
+		// Don't allow regular users to create point_servercommand entities for the same reason as blocking ent_fire
+		if ( !Q_stricmp( item_to_give, "point_servercommand" ) )
+		{
+			if ( engine->IsDedicatedServer() )
+			{
+				// We allow people with disabled autokick to do it, because they already have rcon.
+				if ( pPlayer->IsAutoKickDisabled() == false )
+					return;
+			}
+			else if ( gpGlobals->maxClients > 1 )
+			{
+				// On listen servers with more than 1 player, only allow the host to create point_servercommand.
+				CBasePlayer *pHostPlayer = UTIL_GetListenServerHost();
+				if ( pPlayer != pHostPlayer )
+					return;
+			}
+		}
+
+		// Dirty hack to avoid suit playing it's pickup sound
+		if ( !Q_stricmp( item_to_give, "item_suit" ) )
+		{
+			pPlayer->EquipSuit( false );
+			return;
+		}
+
 		string_t iszItem = AllocPooledString( item_to_give );	// Make a copy of the classname
 		pPlayer->GiveNamedItem( STRING(iszItem) );
 	}
-*/
 }
 
 
@@ -836,7 +918,8 @@ CON_COMMAND( fov, "Change players FOV" )
 }
 
 
-/* BOXBOX don't need this
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 void CC_Player_SetModel( const CCommand &args )
 {
 	if ( gpGlobals->deathmatch )
@@ -852,9 +935,10 @@ void CC_Player_SetModel( const CCommand &args )
 	}
 }
 static ConCommand setmodel("setmodel", CC_Player_SetModel, "Changes's player's model", FCVAR_CHEAT );
-*/
 
-
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CC_Player_TestDispatchEffect( const CCommand &args )
 {
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() );
@@ -930,7 +1014,6 @@ void CC_Player_TestDispatchEffect( const CCommand &args )
 
 static ConCommand test_dispatcheffect("test_dispatcheffect", CC_Player_TestDispatchEffect, "Test a clientside dispatch effect.\n\tUsage: test_dispatcheffect <effect name> <distance away> <flags> <magnitude> <scale>\n\tDefaults are: <distance 1024> <flags 0> <magnitude 0> <scale 0>\n", FCVAR_CHEAT);
 
-/* BOXBOX don't need this
 #ifdef HL2_DLL
 //-----------------------------------------------------------------------------
 // Purpose: Quickly switch to the physics cannon, or back to previous item
@@ -995,9 +1078,9 @@ void CC_Player_BugBaitSwap( void )
 	}
 }
 static ConCommand bugswap("bug_swap", CC_Player_BugBaitSwap, "Automatically swaps the current weapon for the bug bait and back again.", FCVAR_CHEAT );
-*/
 
-
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 void CC_Player_Use( const CCommand &args )
 {
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
@@ -1179,6 +1262,9 @@ CON_COMMAND_F( setpos, "Move player to specified origin (must have sv_cheats).",
 }
 
 
+//------------------------------------------------------------------------------
+// Sets client to godmode
+//------------------------------------------------------------------------------
 void CC_setang_f (const CCommand &args)
 {
 	if ( !sv_cheats->GetBool() )
@@ -1332,6 +1418,7 @@ void CC_HurtMe_f(const CCommand &args)
 
 static ConCommand hurtme("hurtme", CC_HurtMe_f, "Hurts the player.\n\tArguments: <health to lose>", FCVAR_CHEAT);
 
+#ifdef DBGFLAG_ASSERT
 static bool IsInGroundList( CBaseEntity *ent, CBaseEntity *ground )
 {
 	if ( !ground || !ent )
@@ -1351,8 +1438,8 @@ static bool IsInGroundList( CBaseEntity *ent, CBaseEntity *ground )
 	}
 
 	return false;
-
 }
+#endif
 
 static int DescribeGroundList( CBaseEntity *ent )
 {

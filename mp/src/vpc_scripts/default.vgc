@@ -10,7 +10,7 @@
 
 $Games
 {
-	"MSS"
+	"HL2MP"
 }
 
 // Makes the VPC scripts work in the SDK's context

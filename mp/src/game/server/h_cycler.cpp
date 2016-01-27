@@ -275,8 +275,8 @@ bool CWeaponCycler::Deploy( )
 	{
 		pOwner->m_flNextAttack = gpGlobals->curtime + 1.0;
 		SendWeaponAnim( 0 );
-//		m_iClip1 = 0;
-//		m_iClip2 = 0;
+		m_iClip1 = 0;
+		m_iClip2 = 0;
 		return true;
 	}
 	return false;

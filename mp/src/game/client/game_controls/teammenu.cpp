@@ -67,7 +67,7 @@ const char *GetStringTeamColor( int i )
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, "PANEL_TEAM" )
+CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM )
 {
 	m_pViewPort = pViewPort;
 	m_iJumpKey = BUTTON_CODE_INVALID; // this is looked up in Activate()
@@ -190,6 +190,7 @@ void CTeamMenu::LoadMapPage( const char *mapName )
 	char mapRES[ MAX_PATH ];
 
 	char uilanguage[ 64 ];
+	uilanguage[0] = 0;
 	engine->GetUILanguage( uilanguage, sizeof( uilanguage ) );
 
 	Q_snprintf( mapRES, sizeof( mapRES ), "resource/maphtml/%s_%s.html", mapName, uilanguage );

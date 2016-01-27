@@ -59,14 +59,11 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_bAlive, 0, sizeof( m_bAlive ) );
 	memset( m_iHealth, 0, sizeof( m_iHealth ) );
 	m_szUnconnectedName = 0;
-
-// BOXBOX removing teams
-/*
+	
 	for ( int i=0; i<MAX_TEAMS; i++ )
 	{
 		m_Colors[i] = COLOR_GREY;
 	}
-*/
 
 #ifdef HL2MP
 	m_Colors[TEAM_COMBINE] = COLOR_BLUE;
