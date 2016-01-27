@@ -959,8 +959,9 @@ void CBaseEntity::DrawDebugGeometryOverlays(void)
 			g = 255;
 			b = 255;
 
-			if( pPlayer->GetActiveWeapon() != NULL )
-				radius *= pPlayer->GetActiveWeapon()->WeaponAutoAimScale();
+// BOXBOX removing below
+//			if( pPlayer->GetActiveWeapon() != NULL )
+//				radius *= pPlayer->GetActiveWeapon()->WeaponAutoAimScale();
 
 		}
 		else

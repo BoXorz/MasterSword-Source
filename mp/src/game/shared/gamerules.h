@@ -205,8 +205,6 @@ public:
 	
 #else
 
-	virtual void Status( void (*print) (const char *fmt, ...) ) {}
-
 	virtual void GetTaggedConVarList( KeyValues *pCvarTagList ) {}
 
 	// NVNT see if the client of the player entered is using a haptic device.
@@ -260,11 +258,11 @@ public:
 	virtual bool FAllowFlashlight( void ) = 0;// Are players allowed to switch on their flashlight?
 	virtual bool FShouldSwitchWeapon( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon ) = 0;// should the player switch to this weapon?
 
-// Functions to verify the single/multiplayer status of a game
-	virtual bool IsDeathmatch( void ) = 0;//is this a deathmatch game?
-	virtual bool IsTeamplay( void ) { return FALSE; };// is this deathmatch game being played with team rules?
-	virtual bool IsCoOp( void ) = 0;// is this a coop game?
-	virtual const char *GetGameDescription( void ) { return "Half-Life 2"; }  // this is the game name that gets seen in the server browser
+// BOXBOX phasing these out
+//	virtual bool IsDeathmatch( void ) = 0;//is this a deathmatch game?
+//	virtual bool IsTeamplay( void ) { return FALSE; };// is this deathmatch game being played with team rules?
+//	virtual bool IsCoOp( void ) = 0;// is this a coop game?
+	virtual const char *GetGameDescription( void ) { return "gamerules"; }  // this is the game name that gets seen in the server browser
 	
 // Client connection/disconnection
 	virtual bool ClientConnected( edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen ) = 0;// a client just connected to the server (player hasn't spawned yet)
@@ -273,7 +271,7 @@ public:
 	
 // Client damage rules
 	virtual float FlPlayerFallDamage( CBasePlayer *pPlayer ) = 0;// this client just hit the ground after a fall. How much damage?
-	virtual bool  FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker, const CTakeDamageInfo &info ) {return TRUE;};// can this player take damage from this attacker?
+	virtual bool  FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker ) {return TRUE;};// can this player take damage from this attacker?
 	virtual bool ShouldAutoAim( CBasePlayer *pPlayer, edict_t *target ) { return TRUE; }
 	virtual float GetAutoAimScale( CBasePlayer *pPlayer ) { return 1.0f; }
 	virtual int	GetAutoAimMode()	{ return AUTOAIM_ON; }
@@ -378,13 +376,13 @@ public:
 	virtual void CreateStandardEntities();
 
 	// Team name, etc shown in chat and dedicated server console
-	virtual const char *GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer );
+	virtual const char *GetChatPrefix( /*bool bTeamOnly,*/ CBasePlayer *pPlayer );
 
 	// Location name shown in chat
-	virtual const char *GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer ) { return NULL; }
+	virtual const char *GetChatLocation(/* bool bTeamOnly,*/ CBasePlayer *pPlayer ) { return NULL; }
 
 	// VGUI format string for chat, if desired
-	virtual const char *GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer ) { return NULL; }
+	virtual const char *GetChatFormat( /*bool bTeamOnly,*/ CBasePlayer *pPlayer ) { return NULL; } // BOXBOX removing teams
 
 	// Whether props that are on fire should get a DLIGHT.
 	virtual bool ShouldBurningPropsEmitLight() { return false; }
@@ -417,8 +415,6 @@ public:
 	virtual void OnFileReceived( const char * fileName, unsigned int transferID ) { return; }
 
 	virtual bool IsHolidayActive( /*EHoliday*/ int eHoliday ) const { return false; }
-
-	virtual bool IsManualMapChangeOkay( const char **pszReason ){ return true; }
 
 #ifndef CLIENT_DLL
 private:

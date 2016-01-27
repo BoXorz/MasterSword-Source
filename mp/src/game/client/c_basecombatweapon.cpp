@@ -163,10 +163,7 @@ void C_BaseCombatWeapon::OnDataChanged( DataUpdateType_t updateType )
 		}
 	}
 
-	if ( updateType == DATA_UPDATE_CREATED )
-	{
-		UpdateVisibility();
-	}
+	UpdateVisibility();
 
 	m_iOldState = m_iState;
 
@@ -260,7 +257,7 @@ void C_BaseCombatWeapon::DrawCrosshair()
 		}
 	}		 
 */
-
+/*
 	CHudCrosshair *crosshair = GET_HUDELEMENT( CHudCrosshair );
 	if ( !crosshair )
 		return;
@@ -299,6 +296,7 @@ void C_BaseCombatWeapon::DrawCrosshair()
 		else
 			crosshair->ResetCrosshair();
 	}
+*/
 }
 
 //-----------------------------------------------------------------------------
@@ -456,8 +454,8 @@ bool C_BaseCombatWeapon::ShouldDraw( void )
 //-----------------------------------------------------------------------------
 bool C_BaseCombatWeapon::ShouldDrawPickup( void )
 {
-	if ( GetWeaponFlags() & ITEM_FLAG_NOITEMPICKUP )
-		return false;
+//	if ( GetWeaponFlags() & ITEM_FLAG_NOITEMPICKUP )
+//		return false;
 
 	if ( m_bJustRestored )
 		return false;

@@ -16,7 +16,7 @@
 #include "prop_combine_ball.h"
 #include "combine_mine.h"
 #include "basegrenade_shared.h"
-#include "basehlcombatweapon_shared.h"
+//#include "basehlcombatweapon_shared.h"
 #include "ammodef.h"
 
 class CAchievementHLXKillWithPhysicsObjects : public CBaseAchievement
@@ -221,7 +221,7 @@ DECLARE_ACHIEVEMENT( CAchievementHLXKillEliteSoldierWithOwnEnergyBall, ACHIEVEME
 //-----------------------------------------------------------------------------
 int CalcPlayerAttacks( bool bBulletOnly )
 {
-	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+/*	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 	CAmmoDef *pAmmoDef = GetAmmoDef();
 	if ( !pPlayer || !pAmmoDef )
 		return 0;
@@ -230,7 +230,7 @@ int CalcPlayerAttacks( bool bBulletOnly )
 	int iWeapons = pPlayer->WeaponCount();
 	for ( int i = 0; i < iWeapons; i++ )
 	{
-		CBaseHLCombatWeapon *pWeapon = dynamic_cast<CBaseHLCombatWeapon *>( pPlayer->GetWeapon( i ) );
+		CBaseCombatWeapon *pWeapon = dynamic_cast<CBaseCombatWeapon *>( pPlayer->GetWeapon( i ) );
 		if ( pWeapon )
 		{
 			// add primary attacks if we were asked for all attacks, or only if it uses bullet ammo if we were asked to count bullet attacks
@@ -246,6 +246,8 @@ int CalcPlayerAttacks( bool bBulletOnly )
 		}
 	}
 	return iTotalAttacks;
+*/
+	return 0; // BOXBOX replaced function
 }
 
 #endif	// ( defined( HL2_DLL ) || defined( HL2_EPISODIC ) ) && ( !defined ( PORTAL ) )

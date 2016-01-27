@@ -85,6 +85,7 @@ void CreateWeaponManager( const char *pWeaponName, int iMaxPieces )
 
 void WeaponManager_AmmoMod( CBaseCombatWeapon *pWeapon )
 {
+/*
 	for ( int i = 0; i < g_Managers.Count(); i++ )
 	{
 		if ( g_Managers[i]->m_iszWeaponName == pWeapon->m_iClassname )
@@ -105,6 +106,7 @@ void WeaponManager_AmmoMod( CBaseCombatWeapon *pWeapon )
 			pWeapon->m_iClip1 = iNewRandomClip;
 		}
 	}
+*/
 }
 
 void WeaponManager_AddManaged( CBaseEntity *pWeapon )

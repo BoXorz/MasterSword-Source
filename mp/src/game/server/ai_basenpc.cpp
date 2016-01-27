@@ -4239,7 +4239,7 @@ void CAI_BaseNPC::GatherAttackConditions( CBaseEntity *pTarget, float flDist )
 	int		capability;
 	Vector  targetPos;
 	bool	bWeaponHasLOS;
-	int		condition;
+//	int		condition;
 
 	capability		= CapabilitiesGet();
 
@@ -4273,7 +4273,7 @@ void CAI_BaseNPC::GatherAttackConditions( CBaseEntity *pTarget, float flDist )
 
 	bool bWeaponIsReady = (GetActiveWeapon() && !IsWeaponStateChanging());
 
-	// FIXME: move this out of here
+/*
 	if ( (capability & bits_CAP_WEAPON_RANGE_ATTACK1) && bWeaponIsReady )
 	{
 		AI_PROFILE_SCOPE( CAI_BaseNPC_GatherAttackConditions_WeaponRangeAttack1Condition );
@@ -4319,7 +4319,7 @@ void CAI_BaseNPC::GatherAttackConditions( CBaseEntity *pTarget, float flDist )
 			SetCondition(condition);
 		}
 	}
-
+*/
 	if ( (capability & bits_CAP_WEAPON_MELEE_ATTACK1) && bWeaponIsReady)
 	{
 		AI_PROFILE_SCOPE( CAI_BaseNPC_GatherAttackConditions_WeaponMeleeAttack1Condition );
@@ -6945,7 +6945,7 @@ bool CAI_BaseNPC::CreateVPhysics()
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::OnUpdateShotRegulator( )
 {
-	CBaseCombatWeapon *pWeapon = GetActiveWeapon();
+/*	CBaseCombatWeapon *pWeapon = GetActiveWeapon();
 	if ( !pWeapon )
 		return;
 
@@ -6959,6 +6959,7 @@ void CAI_BaseNPC::OnUpdateShotRegulator( )
 	{
 		GetRunningBehavior()->OnUpdateShotRegulator();
 	}
+*/
 }
 
 
@@ -7057,7 +7058,7 @@ int CAI_BaseNPC::UnholsterWeapon( void )
 				m_iDesiredWeaponState = DESIREDWEAPONSTATE_CHANGING;
 			}
 
-			// Refill the clip
+/*
 			if ( GetActiveWeapon()->UsesClipsForAmmo1() )
 			{
 				GetActiveWeapon()->m_iClip1 = GetActiveWeapon()->GetMaxClip1(); 
@@ -7067,7 +7068,7 @@ int CAI_BaseNPC::UnholsterWeapon( void )
 			ClearCondition(COND_LOW_PRIMARY_AMMO);
 			ClearCondition(COND_NO_PRIMARY_AMMO);
 			ClearCondition(COND_NO_SECONDARY_AMMO);
-
+*/
 			return iLayer;
 		}
 	}
@@ -7710,9 +7711,7 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 		if (!pEnemy || !pEnemy->IsAlive())
 		{
 			if ( pEnemy )
-			{
 				DbgEnemyMsg( this, "    %s rejected: dead\n", pEnemy->GetDebugName() );
-			}
 			continue;
 		}
 		
@@ -7787,9 +7786,7 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 		{
 			DbgEnemyMsg( this, "    %s accepted (1)\n", pEnemy->GetDebugName() );
 			if ( pBestEnemy )
-			{
 				DbgEnemyMsg( this, "    (%s displaced)\n", pBestEnemy->GetDebugName() );
-			}
 
 			iBestPriority	 = IRelationPriority ( pEnemy );
 			iBestDistSq		 = (pEnemy->GetAbsOrigin() - GetAbsOrigin() ).LengthSqr();
@@ -7803,9 +7800,7 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 		{
 			DbgEnemyMsg( this, "    %s accepted\n", pEnemy->GetDebugName() );
 			if ( pBestEnemy )
-			{
 				DbgEnemyMsg( this, "    (%s displaced due to priority, %d > %d )\n", pBestEnemy->GetDebugName(), IRelationPriority( pEnemy ), iBestPriority );
-			}
 			// this entity is disliked MORE than the entity that we
 			// currently think is the best visible enemy. No need to do
 			// a distance check, just get mad at this one for now.
@@ -7939,9 +7934,7 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 
 			DbgEnemyMsg( this, "    %s accepted\n", pEnemy->GetDebugName() );
 			if ( pBestEnemy )
-			{
 				DbgEnemyMsg( this, "    (%s displaced due to distance/visibility)\n", pBestEnemy->GetDebugName() );
-			}
 			fBestSeen		 = fCurSeen;
 			fBestVisible	 = fCurVisible;
 			iBestDistSq		 = iDistSq;
@@ -7950,9 +7943,7 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 			bBestUnreachable = bUnreachable;
 		}
 		else
-		{
 			DbgEnemyMsg( this, "    %s rejected: lower priority\n", pEnemy->GetDebugName() );
-		}
 	}
 
 	DbgEnemyMsg( this, "} == %s\n", pBestEnemy->GetDebugName() );
@@ -8043,7 +8034,6 @@ float CAI_BaseNPC::CalcIdealYaw( const Vector &vecTarget )
 	{
 		vecProjection.x = -vecTarget.y;
 		vecProjection.y = vecTarget.x;
-		vecProjection.z = 0;
 
 		return UTIL_VecToYaw( vecProjection - GetLocalOrigin() );
 	}
@@ -8051,7 +8041,6 @@ float CAI_BaseNPC::CalcIdealYaw( const Vector &vecTarget )
 	{
 		vecProjection.x = vecTarget.y;
 		vecProjection.y = vecTarget.x;
-		vecProjection.z = 0;
 
 		return UTIL_VecToYaw( vecProjection - GetLocalOrigin() );
 	}
@@ -8390,11 +8379,11 @@ void CAI_BaseNPC::HandleAnimEvent( animevent_t *pEvent )
 			break;
 		}
 
-  	case EVENT_WEAPON_RELOAD:
+/*  	case EVENT_WEAPON_RELOAD:
 		{
   			if ( GetActiveWeapon() )
   			{
-  				GetActiveWeapon()->WeaponSound( RELOAD_NPC );
+ // 				GetActiveWeapon()->WeaponSound( RELOAD_NPC );
   				GetActiveWeapon()->m_iClip1 = GetActiveWeapon()->GetMaxClip1(); 
   				ClearCondition(COND_LOW_PRIMARY_AMMO);
   				ClearCondition(COND_NO_PRIMARY_AMMO);
@@ -8407,7 +8396,7 @@ void CAI_BaseNPC::HandleAnimEvent( animevent_t *pEvent )
 		{
   			if ( GetActiveWeapon() )
   			{
-  				GetActiveWeapon()->WeaponSound( RELOAD_NPC );
+//  				GetActiveWeapon()->WeaponSound( RELOAD_NPC );
   			}
   			break;
 		}
@@ -8423,7 +8412,7 @@ void CAI_BaseNPC::HandleAnimEvent( animevent_t *pEvent )
   			}
   			break;
 		}
-
+*/
 	case NPC_EVENT_LEFTFOOT:
 	case NPC_EVENT_RIGHTFOOT:
 		// For right now, do nothing. All functionality for this lives in individual npcs.

@@ -56,7 +56,7 @@ bool CAI_BaseHumanoid::HandleInteraction(int interactionType, void *data, CBaseC
 //-----------------------------------------------------------------------------
 void CAI_BaseHumanoid::CheckAmmo( void )
 {
-	BaseClass::CheckAmmo();
+/*	BaseClass::CheckAmmo();
 
 	// FIXME: put into GatherConditions()?
 	// FIXME: why isn't this a baseclass function?
@@ -87,6 +87,7 @@ void CAI_BaseHumanoid::CheckAmmo( void )
 			SetCondition(COND_NO_SECONDARY_AMMO);
 		}
 	}
+*/
 }
 
 

@@ -10,6 +10,8 @@
 #pragma once
 #endif
 
+#include "MSS_shareddefs.h" // BOXBOX
+
 struct colorentry_t
 {
 	unsigned char	index;

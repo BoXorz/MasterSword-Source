@@ -31,7 +31,7 @@
 #endif
 
 #include "client_virtualreality.h"
-#include "sourcevr/isourcevirtualreality.h"
+//#include "headtrack/isourcevirtualreality.h"
 
 // NVNT Include
 #include "haptics/haptic_utils.h"
@@ -1077,6 +1077,9 @@ void CInput::ExtraMouseSample( float frametime, bool active )
 	// Let the headtracker override the view at the very end of the process so
 	// that vehicles and other stuff in g_pClientMode->CreateMove can override 
 	// first
+
+// BOXBOX removing
+/*
 	if ( active && UseVR() )
 	{
 		C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
@@ -1099,7 +1102,7 @@ void CInput::ExtraMouseSample( float frametime, bool active )
 			prediction->SetLocalViewAngles( cmd->viewangles );
 		}
 	}
-
+*/
 }
 
 void CInput::CreateMove ( int sequence_number, float input_sample_frametime, bool active )
@@ -1168,7 +1171,7 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 		C_BaseCombatWeapon *weapon = m_hSelectedWeapon;
 
 		cmd->weaponselect = weapon->entindex();
-		cmd->weaponsubtype = weapon->GetSubType();
+//		cmd->weaponsubtype = weapon->GetSubType(); // BOXBOX redoing stuff
 
 		// Always clear weapon selection
 		m_hSelectedWeapon = NULL;
@@ -1233,6 +1236,8 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 
 #endif
 
+// BOXBOX removing
+/*
 		if ( UseVR() )
 		{
 			C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
@@ -1259,6 +1264,7 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 				engine->SetViewAngles( cmd->viewangles );
 			}
 		}
+*/
 	}
 
 	m_flLastForwardMove = cmd->forwardmove;

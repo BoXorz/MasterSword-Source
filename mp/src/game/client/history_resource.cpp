@@ -87,9 +87,9 @@ void CHudHistoryResource::SetHistoryGap( int iNewHistoryGap )
 //-----------------------------------------------------------------------------
 void CHudHistoryResource::AddToHistory( C_BaseCombatWeapon *weapon )
 {
-	// don't draw exhaustable weapons (grenades) since they'll have an ammo pickup icon as well
- 	if ( weapon->GetWpnData().iFlags & ITEM_FLAG_EXHAUSTIBLE )
- 		return;
+
+// 	if ( weapon->GetItemData().iFlags & ITEM_FLAG_EXHAUSTIBLE )
+ //		return;
 
 	int iId = weapon->entindex();
 
@@ -119,7 +119,7 @@ void CHudHistoryResource::AddToHistory( int iType, int iId, int iCount )
 
 #if defined( CSTRIKE_DLL )
 		// don't leave blank gaps for ammo we're not going to display
-		const FileWeaponInfo_t *pWpnInfo = gWR.GetWeaponFromAmmo( iId );
+		const FileItemInfo_t *pWpnInfo = gWR.GetWeaponFromAmmo( iId );
 		if ( pWpnInfo && ( pWpnInfo->iMaxClip1 >= 0 || pWpnInfo->iMaxClip2 >= 0 ) )
 		{
 			if ( !pWpnInfo->iconSmall )
@@ -287,11 +287,10 @@ bool CHudHistoryResource::ShouldDraw( void )
 #endif
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Draw the pickup history
-//-----------------------------------------------------------------------------
+// BOXBOX redoing
 void CHudHistoryResource::Paint( void )
 {
+/*
 	if ( m_bDoNotDraw )
 	{
 		// this is to not draw things until the first rendered
@@ -337,8 +336,8 @@ void CHudHistoryResource::Paint( void )
 			case HISTSLOT_AMMO:
 				{
 					// Get the weapon we belong to
-#ifndef HL2MP
-					const FileWeaponInfo_t *pWpnInfo = gWR.GetWeaponFromAmmo( m_PickupHistory[i].iId );
+#ifndef MSS
+					const FileItemInfo_t *pWpnInfo = gWR.GetWeaponFromAmmo( m_PickupHistory[i].iId );
 					if ( pWpnInfo && ( pWpnInfo->iMaxClip1 >= 0 || pWpnInfo->iMaxClip2 >= 0 ) )
 					{
 						// The weapon will be the main icon, and the ammo the smaller
@@ -389,7 +388,7 @@ void CHudHistoryResource::Paint( void )
 						clr[3] = MIN( scale, 255 );
 					}
 
-					itemIcon = pWeapon->GetSpriteInactive();
+//					itemIcon = pWeapon->GetSpriteInactive();
 					bHalfHeight = false;
 				}
 				break;
@@ -420,7 +419,7 @@ void CHudHistoryResource::Paint( void )
 			int ypos = tall - (m_flHistoryGap * (i + 1));
 			int xpos = wide - itemIcon->Width() - m_flIconInset;
 
-#ifndef HL2MP
+#ifndef MSS
 			// Adjust for a half-height icon
 			if ( bHalfHeight )
 			{
@@ -460,6 +459,7 @@ void CHudHistoryResource::Paint( void )
 			}
 		}
 	}
+*/
 }
 
 

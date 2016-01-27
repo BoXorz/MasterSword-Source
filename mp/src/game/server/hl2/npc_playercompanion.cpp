@@ -963,7 +963,7 @@ int CNPC_PlayerCompanion::TranslateSchedule( int scheduleType )
 	{
 	case SCHED_IDLE_STAND:
 	case SCHED_ALERT_STAND:
-		if( GetActiveWeapon() )
+/*		if( GetActiveWeapon() )
 		{
 			// Everyone with less than half a clip takes turns reloading when not fighting.
 			CBaseCombatWeapon *pWeapon = GetActiveWeapon();
@@ -984,7 +984,7 @@ int CNPC_PlayerCompanion::TranslateSchedule( int scheduleType )
 				return SCHED_RELOAD;
 			}
 		}
-		break;
+*/		break;
 
 	case SCHED_COWER:
 		return SCHED_PC_COWER;
@@ -1447,15 +1447,15 @@ void CNPC_PlayerCompanion::HandleAnimEvent( animevent_t *pEvent )
 	switch( pEvent->event )
 	{
 	case EVENT_WEAPON_RELOAD:
-		if ( GetActiveWeapon() )
+/*		if ( GetActiveWeapon() )
 		{
-			GetActiveWeapon()->WeaponSound( RELOAD_NPC );
+//			GetActiveWeapon()->WeaponSound( RELOAD_NPC );
 			GetActiveWeapon()->m_iClip1 = GetActiveWeapon()->GetMaxClip1(); 
 			ClearCondition(COND_LOW_PRIMARY_AMMO);
 			ClearCondition(COND_NO_PRIMARY_AMMO);
 			ClearCondition(COND_NO_SECONDARY_AMMO);
 		}
-		break;
+*/		break;
 
 	default:
 		BaseClass::HandleAnimEvent( pEvent );

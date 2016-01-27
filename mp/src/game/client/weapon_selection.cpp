@@ -22,9 +22,7 @@
 ConVar hud_drawhistory_time( "hud_drawhistory_time", HISTORY_DRAW_TIME, 0 );
 ConVar hud_fastswitch( "hud_fastswitch", "0", FCVAR_ARCHIVE | FCVAR_ARCHIVE_XBOX );
 
-//-----------------------------------------------------------------------------
-// Purpose: Weapon Selection commands
-//-----------------------------------------------------------------------------
+/* BOXBOX NOPE
 DECLARE_HUD_COMMAND_NAME(CBaseHudWeaponSelection, Slot1, "CHudWeaponSelection");
 DECLARE_HUD_COMMAND_NAME(CBaseHudWeaponSelection, Slot2, "CHudWeaponSelection");
 DECLARE_HUD_COMMAND_NAME(CBaseHudWeaponSelection, Slot3, "CHudWeaponSelection");
@@ -56,7 +54,7 @@ HOOK_COMMAND( cancelselect, Close );
 HOOK_COMMAND( invnext, NextWeapon );
 HOOK_COMMAND( invprev, PrevWeapon );
 HOOK_COMMAND( lastinv, LastWeapon );
-
+*/
 // instance info
 CBaseHudWeaponSelection *CBaseHudWeaponSelection::s_pInstance = NULL;
 CBaseHudWeaponSelection *CBaseHudWeaponSelection::GetInstance()
@@ -101,7 +99,6 @@ void CBaseHudWeaponSelection::Reset(void)
 	// Start hidden
 	m_bSelectionVisible = false;
 	m_flSelectionTime = gpGlobals->curtime;
-	gHUD.UnlockRenderGroup( gHUD.LookupRenderGroupIndexByName( "weapon_selection" ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -208,7 +205,6 @@ bool CBaseHudWeaponSelection::IsInSelectionMode()
 void CBaseHudWeaponSelection::OpenSelection( void )
 {
 	m_bSelectionVisible = true;
-	gHUD.LockRenderGroup( gHUD.LookupRenderGroupIndexByName( "weapon_selection" ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -217,15 +213,12 @@ void CBaseHudWeaponSelection::OpenSelection( void )
 void CBaseHudWeaponSelection::HideSelection( void )
 {
 	m_bSelectionVisible = false;
-	gHUD.UnlockRenderGroup( gHUD.LookupRenderGroupIndexByName( "weapon_selection" ) );
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Returns whether a weapon can be selected in the HUD, based on hud type
-//-----------------------------------------------------------------------------
+// BOXBOX redoing
 bool CBaseHudWeaponSelection::CanBeSelectedInHUD( C_BaseCombatWeapon *pWeapon )
 {
-	// Xbox: In plus type, weapons without ammo can still be selected in the HUD
+/*
 	if( HUDTYPE_PLUS == hud_fastswitch.GetInt() )
 	{
 		return pWeapon->VisibleInWeaponSelection();
@@ -238,6 +231,9 @@ bool CBaseHudWeaponSelection::CanBeSelectedInHUD( C_BaseCombatWeapon *pWeapon )
 
 	// All other current hud types
 	return pWeapon->CanBeSelected();
+	*/
+
+	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -277,9 +273,7 @@ void CBaseHudWeaponSelection::OnWeaponPickup( C_BaseCombatWeapon *pWeapon )
 	}
 }
 
-//------------------------------------------------------------------------
-// Command Handlers
-//------------------------------------------------------------------------
+/* BOXBOX NOPE
 void CBaseHudWeaponSelection::UserCmd_Slot1(void)
 {
 	if( HUDTYPE_CAROUSEL == hud_fastswitch.GetInt() )
@@ -362,7 +356,7 @@ void CBaseHudWeaponSelection::UserCmd_Slot10(void)
 {
 	SelectSlot( 10 );
 }
-
+*/
 //-----------------------------------------------------------------------------
 // Purpose: returns true if the CHudMenu should take slot1, etc commands
 //-----------------------------------------------------------------------------
@@ -400,9 +394,7 @@ bool CBaseHudWeaponSelection::IsHudMenuPreventingWeaponSelection()
 	return IsHudMenuTakingInput();
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Menu Selection Code
-//-----------------------------------------------------------------------------
+/* BOXBOX NOPE
 void CBaseHudWeaponSelection::SelectSlot( int iSlot )
 {
 	// A menu may be overriding weapon selection commands
@@ -474,15 +466,16 @@ void CBaseHudWeaponSelection::UserCmd_LastWeapon(void)
 	if ( !BaseClass::ShouldDraw() )
 		return;
 
-	/*
+
 	if ( IsHudMenuPreventingWeaponSelection() )	
 	{ 
 		return;
 	}
-	*/
+
 
 	SwitchToLastWeapon();
 }
+*/
 
 //-----------------------------------------------------------------------------
 // Purpose: Switches the last weapon the player was using
@@ -508,11 +501,10 @@ void CBaseHudWeaponSelection::SetWeaponSelected( void )
 }
 
 
-//-----------------------------------------------------------------------------
-// Purpose: Player has chosen to draw the currently selected weapon
-//-----------------------------------------------------------------------------
+// BOXBOX redoing
 void CBaseHudWeaponSelection::SelectWeapon( void )
 {
+/*
 	if ( !GetSelectedWeapon() )
 	{
 		engine->ClientCmd( "cancelselect\n" );
@@ -539,6 +531,7 @@ void CBaseHudWeaponSelection::SelectWeapon( void )
 		// Play the "weapon selected" sound
 		player->EmitSound( "Player.WeaponSelected" );
 	}
+*/
 }
 
 //-----------------------------------------------------------------------------
@@ -568,11 +561,10 @@ void CBaseHudWeaponSelection::CancelWeaponSelection( void )
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Returns the first weapon for a given slot.
-//-----------------------------------------------------------------------------
+// BOXBOX redoing
 C_BaseCombatWeapon *CBaseHudWeaponSelection::GetFirstPos( int iSlot )
 {
+/*
 	int iLowestPosition = MAX_WEAPON_POSITIONS;
 	C_BaseCombatWeapon *pFirstWeapon = NULL;
 
@@ -598,13 +590,15 @@ C_BaseCombatWeapon *CBaseHudWeaponSelection::GetFirstPos( int iSlot )
 	}
 
 	return pFirstWeapon;
+*/
+
+	return NULL;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
+// BOXBOX redoing
 C_BaseCombatWeapon *CBaseHudWeaponSelection::GetNextActivePos( int iSlot, int iSlotPos )
 {
+/*
 	if ( iSlotPos >= MAX_WEAPON_POSITIONS || iSlot >= MAX_WEAPON_SLOTS )
 		return NULL;
 
@@ -632,4 +626,7 @@ C_BaseCombatWeapon *CBaseHudWeaponSelection::GetNextActivePos( int iSlot, int iS
 	}
 
 	return pNextWeapon;
+*/
+
+	return NULL;
 }

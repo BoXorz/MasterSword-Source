@@ -122,9 +122,9 @@ public:
 	virtual CBaseCombatWeapon *GetNextBestWeapon( CBaseCombatCharacter *pPlayer, CBaseCombatWeapon *pCurrentWeapon );
 	virtual bool SwitchToNextBestWeapon( CBaseCombatCharacter *pPlayer, CBaseCombatWeapon *pCurrentWeapon );
 
-// Functions to verify the single/multiplayer status of a game
-	virtual bool IsDeathmatch( void );
-	virtual bool IsCoOp( void );
+// BOXBOX not using these
+//	virtual bool IsDeathmatch( void );
+//	virtual bool IsCoOp( void );
 
 // Client connection/disconnection
 	// If ClientConnected returns FALSE, the connection is rejected and the user is provided the reason specified in
@@ -136,7 +136,7 @@ public:
 
 // Client damage rules
 	virtual float FlPlayerFallDamage( CBasePlayer *pPlayer );
-	virtual bool  FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker, const CTakeDamageInfo &info );
+	virtual bool  FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker );
 	virtual bool AllowDamage( CBaseEntity *pVictim, const CTakeDamageInfo &info );
 
 // Client spawn/respawn control
@@ -215,7 +215,6 @@ public:
 	void IncrementMapCycleIndex();
 
 	void HaveAllPlayersSpeakConceptIfAllowed( int iConcept, int iTeam = TEAM_UNASSIGNED, const char *modifiers = NULL );
-	void RandomPlayersSpeakConceptIfAllowed( int iConcept, int iNumRandomPlayer = 1, int iTeam = TEAM_UNASSIGNED, const char *modifiers = NULL );
 
 	virtual void GetTaggedConVarList( KeyValues *pCvarTagList );
 
@@ -239,26 +238,20 @@ public:
 	virtual void GetNextLevelName( char *szNextMap, int bufsize, bool bRandom = false );
 
 	static void DetermineMapCycleFilename( char *pszResult, int nSizeResult, bool bForceSpew );
-	virtual void LoadMapCycleFileIntoVector ( const char *pszMapCycleFile, CUtlVector<char *> &mapList );
+	static void LoapMapCycleFileIntoVector ( const char *pszMapCycleFile, CUtlVector<char *> &mapList );
 	static void FreeMapCycleFileVector ( CUtlVector<char *> &mapList );
-
-	// LoadMapCycleFileIntoVector without the fixups inherited versions of gamerules may provide
-	static void RawLoadMapCycleFileIntoVector ( const char *pszMapCycleFile, CUtlVector<char *> &mapList );
 
 	bool IsMapInMapCycle( const char *pszName );
 
-	virtual bool IsManualMapChangeOkay( const char **pszReason ) OVERRIDE;
-
 protected:
 	virtual bool UseSuicidePenalty() { return true; }		// apply point penalty for suicide?
- 	virtual float GetLastMajorEventTime( void ){ return -1.0f; }
 
 public:
 	virtual void ChangeLevel( void );
 
 protected:
 	virtual void GoToIntermission( void );
-	virtual void LoadMapCycleFile( void );
+	void LoadMapCycleFile( void );
 	void ChangeLevelToMap( const char *pszMap );
 
 	float m_flIntermissionEndTime;
