@@ -223,7 +223,7 @@ class CWeaponCycler : public CBaseCombatWeapon
 public:
 	DECLARE_CLASS( CWeaponCycler, CBaseCombatWeapon );
 
-//	DECLARE_SERVERCLASS(); // BOXBOX removing
+	DECLARE_SERVERCLASS();
 
 	void Spawn( void );
 
@@ -235,9 +235,8 @@ public:
 	int m_iModel;
 };
 
-// BOXBOX removing
-//	IMPLEMENT_SERVERCLASS_ST(CWeaponCycler, DT_WeaponCycler)
-//	END_SEND_TABLE()
+IMPLEMENT_SERVERCLASS_ST(CWeaponCycler, DT_WeaponCycler)
+END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( cycler_weapon, CWeaponCycler );
 
