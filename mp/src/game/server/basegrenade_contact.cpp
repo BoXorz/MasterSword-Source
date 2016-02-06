@@ -11,7 +11,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-extern ConVar    sk_plr_dmg_grenade;
+// extern ConVar    sk_plr_dmg_grenade;
 
 // ==========================================================================================
 
@@ -54,7 +54,7 @@ void CBaseGrenadeContact::Spawn( void )
 	// Explode on contact
 	SetTouch( &CBaseGrenadeContact::ExplodeTouch );
 
-	m_flDamage = sk_plr_dmg_grenade.GetFloat();
+	m_flDamage = 100; // BOXBOX was  sk_plr_dmg_grenade.GetFloat();
 
 	// Allow player to blow this puppy up in the air
 	m_takedamage	= DAMAGE_YES;

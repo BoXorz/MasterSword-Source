@@ -2853,12 +2853,12 @@ void SixenseInput::SixenseUpdateKeys( float flFrametime, CUserCmd *pCmd )
 	// walk
 	//if ( m_pLeftButtonStates->justPressed( SIXENSE_BUTTON_2 ) )
 	//{
-	//	new_buttons |= IN_WALK;
+	//	new_buttons |= IN_SNEAK;
 	//}
 
 	//if ( m_pLeftButtonStates->justReleased( SIXENSE_BUTTON_2 ) )
 	//{
-	//	new_buttons &= ~IN_WALK;
+	//	new_buttons &= ~IN_SNEAK;
 	//}
 
 	// coop gesture

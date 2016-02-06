@@ -110,7 +110,7 @@ state bit 2 is edge triggered on the down to up transition
 */
 
 kbutton_t	in_speed;
-kbutton_t	in_walk;
+kbutton_t	in_sneak;
 kbutton_t	in_jlook;
 kbutton_t	in_strafe;
 kbutton_t	in_commandermousemove;
@@ -459,8 +459,8 @@ void IN_MoveleftDown( const CCommand &args ) {KeyDown(&in_moveleft, args[1] );}
 void IN_MoveleftUp( const CCommand &args ) {KeyUp(&in_moveleft, args[1] );}
 void IN_MoverightDown( const CCommand &args ) {KeyDown(&in_moveright, args[1] );}
 void IN_MoverightUp( const CCommand &args ) {KeyUp(&in_moveright, args[1] );}
-void IN_WalkDown( const CCommand &args ) {KeyDown(&in_walk, args[1] );}
-void IN_WalkUp( const CCommand &args ) {KeyUp(&in_walk, args[1] );}
+void IN_SneakDown( const CCommand &args ) {KeyDown(&in_sneak, args[1] );}
+void IN_SneakUp( const CCommand &args ) {KeyUp(&in_sneak, args[1] );}
 void IN_SpeedDown( const CCommand &args ) {KeyDown(&in_speed, args[1] );}
 void IN_SpeedUp( const CCommand &args ) {KeyUp(&in_speed, args[1] );}
 void IN_StrafeDown( const CCommand &args ) {KeyDown(&in_strafe, args[1] );}
@@ -1449,7 +1449,7 @@ int CInput::GetButtonBits( int bResetState )
 	int bits = 0;
 
 	CalcButtonBits( bits, IN_SPEED, s_ClearInputState, &in_speed, bResetState );
-	CalcButtonBits( bits, IN_WALK, s_ClearInputState, &in_walk, bResetState );
+	CalcButtonBits( bits, IN_SNEAK, s_ClearInputState, &in_sneak, bResetState );
 	CalcButtonBits( bits, IN_ATTACK, s_ClearInputState, &in_attack, bResetState );
 	CalcButtonBits( bits, IN_DUCK, s_ClearInputState, &in_duck, bResetState );
 	CalcButtonBits( bits, IN_JUMP, s_ClearInputState, &in_jump, bResetState );
@@ -1585,8 +1585,8 @@ static ConCommand startmoveright("+moveright", IN_MoverightDown);
 static ConCommand endmoveright("-moveright", IN_MoverightUp);
 static ConCommand startspeed("+speed", IN_SpeedDown);
 static ConCommand endspeed("-speed", IN_SpeedUp);
-static ConCommand startwalk("+walk", IN_WalkDown);
-static ConCommand endwalk("-walk", IN_WalkUp);
+static ConCommand startsneak("+sneak", IN_SneakDown);
+static ConCommand endsneak("-sneak", IN_SneakUp);
 static ConCommand startattack("+attack", IN_AttackDown);
 static ConCommand endattack("-attack", IN_AttackUp);
 static ConCommand startattack2("+attack2", IN_Attack2Down);
