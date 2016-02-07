@@ -229,7 +229,7 @@ ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REP
 
 	extern bool		g_fGameOver;
 
-#if !(defined( HL2MP ) || defined( PORTAL_MP ))
+#if !(defined( MSS ) || defined( PORTAL_MP ))
 	class CVoiceGameMgrHelper : public IVoiceGameMgrHelper
 	{
 	public:
@@ -1410,14 +1410,14 @@ ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REP
 
 					if( pCannon )
 					{
-						if( PhysCannonAccountableForObject(pCannon, info.GetInflictor() ) )
-						{
+//						if( PhysCannonAccountableForObject(pCannon, info.GetInflictor() ) )
+//						{
 							// Antlions can always be squashed!
 							if ( pVictim->Classify() == CLASS_ANTLION )
 								return true;
 
   							return false;
-						}
+//						}
 					}
 				}
 			}
@@ -1775,7 +1775,7 @@ bool CHalfLife2::ShouldBurningPropsEmitLight()
 // Global functions.
 // ------------------------------------------------------------------------------------ //
 
-#ifndef HL2MP
+#ifndef MSS
 #ifndef PORTAL
 
 // shared ammo definition
