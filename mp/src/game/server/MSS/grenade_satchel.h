@@ -15,7 +15,13 @@
 #endif
 
 #include "basegrenade_shared.h"
+<<<<<<< HEAD:mp/src/game/server/MSS/grenade_satchel.h
 #include "MSS/weapon_slam.h"
+=======
+
+// BOXBOX removing
+//#include "hl2mp/weapon_slam.h"
+>>>>>>> parent of 2371c5c... Revert "hl strip":mp/src/game/server/MSS/grenade_satchel.h
 
 class CSoundPatch;
 class CSprite;
@@ -39,7 +45,7 @@ public:
 	Vector			m_vLastPosition;
 
 public:
-	CWeapon_SLAM*	m_pMyWeaponSLAM;	// Who shot me..
+//	CWeapon_SLAM*	m_pMyWeaponSLAM;	// BOXBOX removing
 	bool			m_bIsAttached;
 	void			Deactivate( void );
 

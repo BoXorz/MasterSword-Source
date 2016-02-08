@@ -6,7 +6,14 @@
 //=============================================================================//
 
 #include "cbase.h"
+<<<<<<< HEAD:mp/src/game/shared/MSS/weapon_crowbar.cpp
 #include "MSS/weapon_crowbar.h"
+=======
+
+// BOXBOX changing line below
+#include "MSS/weapon_crowbar.h"
+
+>>>>>>> parent of 2371c5c... Revert "hl strip":mp/src/game/shared/MSS/weapon_crowbar.cpp
 #include "weapon_hl2mpbasehlmpcombatweapon.h"
 #include "gamerules.h"
 #include "ammodef.h"

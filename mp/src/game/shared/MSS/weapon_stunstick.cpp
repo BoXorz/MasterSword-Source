@@ -12,7 +12,8 @@
 #include "debugoverlay_shared.h"
 
 #ifndef CLIENT_DLL
-	#include "npc_metropolice.h"
+//	#include "npc_metropolice.h"
+#include "ai_basenpc.h" //BOXBOX added
 	#include "te_effect_dispatch.h"
 #endif
 

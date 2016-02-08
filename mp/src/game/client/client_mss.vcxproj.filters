@@ -28,9 +28,12 @@
     <Filter Include="Source Files\game_controls">
       <UniqueIdentifier>{1E7DB91A-DC0A-B17F-617D-4C4FB3FA7A3E}</UniqueIdentifier>
     </Filter>
+<<<<<<< HEAD
     <Filter Include="Source Files\HL2 DLL">
       <UniqueIdentifier>{3C43D38A-46AF-2183-A5E5-44383B1D2652}</UniqueIdentifier>
     </Filter>
+=======
+>>>>>>> parent of 2371c5c... Revert "hl strip"
     <Filter Include="Source Files\MSS">
       <UniqueIdentifier>{D2940245-ECD4-0DF9-1C92-F6622B25F151}</UniqueIdentifier>
     </Filter>
@@ -1841,6 +1844,7 @@
     <ClInclude Include="game_controls\basemodelpanel.h">
       <Filter>Source Files\game_controls</Filter>
     </ClInclude>
+<<<<<<< HEAD
     <ClInclude Include="hl2\c_basehelicopter.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
@@ -1880,6 +1884,8 @@
     <ClInclude Include="hl2\hud_suitpower.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
+=======
+>>>>>>> parent of 2371c5c... Revert "hl strip"
     <ClInclude Include="MSS\c_hl2mp_player.h">
       <Filter>Source Files\MSS</Filter>
     </ClInclude>
@@ -1943,6 +1949,18 @@
     <ClInclude Include="toolframework_client.h">
       <Filter>Tool Framework</Filter>
     </ClInclude>
+<<<<<<< HEAD
+=======
+    <ClInclude Include="..\shared\MSS\MSS_movedata.h">
+      <Filter>Source Files\MSS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\MSS\MSS_gamemovement.h">
+      <Filter>Source Files\MSS</Filter>
+    </ClInclude>
+    <ClInclude Include="MSS\c_MSS_playerlocaldata.h">
+      <Filter>Source Files\MSS</Filter>
+    </ClInclude>
+>>>>>>> parent of 2371c5c... Revert "hl strip"
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mp3player.cpp">
@@ -3022,6 +3040,7 @@
     <ClCompile Include="game_controls\vguitextwindow.cpp">
       <Filter>Source Files\game_controls</Filter>
     </ClCompile>
+<<<<<<< HEAD
     <ClCompile Include="..\..\game\shared\hl2\basehlcombatweapon_shared.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
@@ -3208,6 +3227,8 @@
     <ClCompile Include="hl2\vgui_rootpanel_hl2.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
+=======
+>>>>>>> parent of 2371c5c... Revert "hl strip"
     <ClCompile Include="MSS\c_hl2mp_player.cpp">
       <Filter>Source Files\MSS</Filter>
     </ClCompile>
@@ -3505,6 +3526,30 @@
     <ClCompile Include="toolframework_client.cpp">
       <Filter>Tool Framework</Filter>
     </ClCompile>
+<<<<<<< HEAD
+=======
+    <ClCompile Include="MSS\MSS_clientmode.cpp">
+      <Filter>Source Files\MSS</Filter>
+    </ClCompile>
+    <ClCompile Include="MSS\MSS_prediction.cpp">
+      <Filter>Source Files\MSS</Filter>
+    </ClCompile>
+    <ClCompile Include="MSS\MSS_in_main.cpp">
+      <Filter>Source Files\MSS</Filter>
+    </ClCompile>
+    <ClCompile Include="MSS\ui\MSS_vgui_rootpanel.cpp">
+      <Filter>Source Files\MSS\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\MSS\MSS_gamemovement.cpp">
+      <Filter>Source Files\MSS</Filter>
+    </ClCompile>
+    <ClCompile Include="MSS\c_MSS_playerlocaldata.cpp">
+      <Filter>Source Files\MSS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\MSS\MSS_usermessages.cpp">
+      <Filter>Source Files\MSS</Filter>
+    </ClCompile>
+>>>>>>> parent of 2371c5c... Revert "hl strip"
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
@@ -3557,4 +3602,8 @@
       <Filter>VPC Scripts</Filter>
     </None>
   </ItemGroup>
+<<<<<<< HEAD
 </Project>
+=======
+</Project>
+>>>>>>> parent of 2371c5c... Revert "hl strip"

@@ -10,17 +10,20 @@
 #pragma once
 
 class C_HL2MP_Player;
-#include "c_basehlplayer.h"
+
+// BOXBOX replacing line below
+//#include "c_basehlplayer.h"
+#include "c_baseplayer.h"
+#include "MSS_movedata.h"
+#include "c_MSS_playerlocaldata.h"
 #include "hl2mp_player_shared.h"
 #include "beamdraw.h"
 
-//=============================================================================
-// >> HL2MP_Player
-//=============================================================================
-class C_HL2MP_Player : public C_BaseHLPlayer
+// BOXBOX changed parent class
+class C_HL2MP_Player : public C_BasePlayer
 {
 public:
-	DECLARE_CLASS( C_HL2MP_Player, C_BaseHLPlayer );
+	DECLARE_CLASS( C_HL2MP_Player, C_BasePlayer );
 
 	DECLARE_CLIENTCLASS();
 	DECLARE_PREDICTABLE();
@@ -65,10 +68,6 @@ public:
 	virtual void CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov );
 	virtual const QAngle& EyeAngles( void );
 
-	
-	bool	CanSprint( void );
-	void	StartSprinting( void );
-	void	StopSprinting( void );
 	void	HandleSpeedChanges( void );
 	void	UpdateLookAt( void );
 	void	Initialize( void );
@@ -79,15 +78,36 @@ public:
 
 	HL2MPPlayerState State_Get() const;
 
-	// Walking
-	void StartWalking( void );
-	void StopWalking( void );
-	bool IsWalking( void ) { return m_fIsWalking; }
-
 	virtual void PostThink( void );
+
+// *************************************************************************************************************************
+// ************************************************  BOXBOX MSS STUFF   ****************************************************
+// *************************************************************************************************************************
+
+	C_MSSPlayerLocalData		m_MSSLocal;	
+	LadderMove_t		*GetLadderMove() { return &m_MSSLocal.m_LadderMove; }
+	virtual void		ExitLadder();
+	bool	m_bPlayUseDenySound;
+
+// SPRINTING
+	bool	CanSprint(void);
+	void	StartSprinting(void);
+	void	StopSprinting(void);
+	bool	IsSprinting(void) { return m_bIsSprinting; }
+
+// SNEAKING
+	void StartSneaking(void);
+	void StopSneaking(void);
+	bool IsSneaking(void) { return m_bIsSneaking; }
 
 private:
 	
+	bool	m_bIsSprinting;
+	bool	m_bIsSneaking;
+
+
+// BOXBOX END MSS STUFF
+
 	C_HL2MP_Player( const C_HL2MP_Player & );
 
 	CPlayerAnimState m_PlayerAnimState;
@@ -126,7 +146,6 @@ private:
 
 	CNetworkVar( HL2MPPlayerState, m_iPlayerState );	
 
-	bool m_fIsWalking;
 };
 
 inline C_HL2MP_Player *ToHL2MPPlayer( CBaseEntity *pEntity )

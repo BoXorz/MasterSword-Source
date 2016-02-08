@@ -14,7 +14,7 @@
 #else
 	#include "hl2mp_player.h"
 	#include "te_effect_dispatch.h"
-	#include "grenade_frag.h"
+//	#include "grenade_frag.h"	// BOXBOX removing
 #endif
 
 #include "weapon_ar2.h"
@@ -422,6 +422,9 @@ void DropPrimedFragGrenade( CHL2MP_Player *pPlayer, CBaseCombatWeapon *pGrenade 
 //-----------------------------------------------------------------------------
 void CWeaponFrag::ThrowGrenade( CBasePlayer *pPlayer )
 {
+
+// BOXBOX removing
+/*
 #ifndef CLIENT_DLL
 	Vector	vecEye = pPlayer->EyePosition();
 	Vector	vForward, vRight;
@@ -454,7 +457,7 @@ void CWeaponFrag::ThrowGrenade( CBasePlayer *pPlayer )
 		pGrenade->SetDamageRadius( GRENADE_DAMAGE_RADIUS );
 	}
 #endif
-
+*/
 	m_bRedraw = true;
 
 	WeaponSound( SINGLE );
@@ -469,6 +472,9 @@ void CWeaponFrag::ThrowGrenade( CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 void CWeaponFrag::LobGrenade( CBasePlayer *pPlayer )
 {
+
+// BOXBOX removing
+/*
 #ifndef CLIENT_DLL
 	Vector	vecEye = pPlayer->EyePosition();
 	Vector	vForward, vRight;
@@ -488,7 +494,7 @@ void CWeaponFrag::LobGrenade( CBasePlayer *pPlayer )
 		pGrenade->SetDamageRadius( GRENADE_DAMAGE_RADIUS );
 	}
 #endif
-
+*/
 	WeaponSound( WPN_DOUBLE );
 
 	// player "shoot" animation
@@ -503,6 +509,9 @@ void CWeaponFrag::LobGrenade( CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 void CWeaponFrag::RollGrenade( CBasePlayer *pPlayer )
 {
+
+// BOXBOX removing
+/*
 #ifndef CLIENT_DLL
 	// BUGBUG: Hardcoded grenade width of 4 - better not change the model :)
 	Vector vecSrc;
@@ -541,7 +550,7 @@ void CWeaponFrag::RollGrenade( CBasePlayer *pPlayer )
 	}
 
 #endif
-
+*/
 	WeaponSound( SPECIAL1 );
 
 	// player "shoot" animation

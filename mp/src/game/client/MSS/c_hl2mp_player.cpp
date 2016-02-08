@@ -23,22 +23,25 @@
 LINK_ENTITY_TO_CLASS( player, C_HL2MP_Player );
 
 IMPLEMENT_CLIENTCLASS_DT(C_HL2MP_Player, DT_HL2MP_Player, CHL2MP_Player)
+	RecvPropDataTable( RECVINFO_DT(m_MSSLocal),0, &REFERENCE_RECV_TABLE(DT_MSSLocal) ), // BOXBOX added
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
 	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
 	RecvPropEHandle( RECVINFO( m_hRagdoll ) ),
 	RecvPropInt( RECVINFO( m_iSpawnInterpCounter ) ),
 	RecvPropInt( RECVINFO( m_iPlayerSoundType) ),
-
-	RecvPropBool( RECVINFO( m_fIsWalking ) ),
+	RecvPropBool( RECVINFO( m_bIsSprinting ) ),		// BOXBOX added 2
+	RecvPropBool( RECVINFO( m_bIsSneaking ) ),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_HL2MP_Player )
-	DEFINE_PRED_FIELD( m_fIsWalking, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_TYPEDESCRIPTION( m_MSSLocal, C_MSSPlayerLocalData ),	// BOXBOX added
+	DEFINE_PRED_FIELD( m_bIsSprinting, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),	// BOXBOX added
+	DEFINE_PRED_FIELD( m_bIsSneaking, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 
-#define	HL2_WALK_SPEED 150
-#define	HL2_NORM_SPEED 190
-#define	HL2_SPRINT_SPEED 320
+#define	MSS_SNEAK_SPEED  100	// BOXBOX the base sneak speed. skills can increase this speed.
+#define	MSS_NORM_SPEED   160	// BOXBOX the normal "walking" movement speed.
+#define	MSS_SPRINT_SPEED 300	// BOXBOX the base sprint speed. skills can increase this speed.
 
 static ConVar cl_playermodel( "cl_playermodel", "none", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_SERVER_CAN_EXECUTE, "Default Player Model");
 static ConVar cl_defaultweapon( "cl_defaultweapon", "weapon_physcannon", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default Spawn Weapon");
@@ -58,6 +61,8 @@ C_HL2MP_Player::C_HL2MP_Player() : m_PlayerAnimState( this ), m_iv_angEyeAngles(
 	m_blinkTimer.Invalidate();
 
 	m_pFlashlightBeam = NULL;
+
+	m_bIsSprinting = false; // BOXBOX added
 }
 
 C_HL2MP_Player::~C_HL2MP_Player( void )
@@ -327,6 +332,8 @@ void C_HL2MP_Player::PreThink( void )
 
 	HandleSpeedChanges();
 
+// BOXBOX removing
+/*
 	if ( m_HL2Local.m_flSuitPower <= 0.0f )
 	{
 		if( IsSprinting() )
@@ -334,6 +341,7 @@ void C_HL2MP_Player::PreThink( void )
 			StopSprinting();
 		}
 	}
+*/
 }
 
 const QAngle &C_HL2MP_Player::EyeAngles()
@@ -530,7 +538,7 @@ void C_HL2MP_Player::ReleaseFlashlight( void )
 float C_HL2MP_Player::GetFOV( void )
 {
 	//Find our FOV with offset zoom value
-	float flFOVOffset = C_BasePlayer::GetFOV() + GetZoom();
+	float flFOVOffset = C_BasePlayer::GetFOV() /* + GetZoom() */ ; // BOXBOX removed GetZoom()
 
 	// Clamp FOV in MP
 	int min_fov = GetMinFOV();
@@ -566,6 +574,8 @@ bool C_HL2MP_Player::CanSprint( void )
 //-----------------------------------------------------------------------------
 void C_HL2MP_Player::StartSprinting( void )
 {
+// BOXBOX removing stuff  BOXBOX TODO set up endurance stuff
+/*
 	if( m_HL2Local.m_flSuitPower < 10 )
 	{
 		// Don't sprint unless there's a reasonable
@@ -575,13 +585,13 @@ void C_HL2MP_Player::StartSprinting( void )
 		EmitSound( filter, entindex(), "HL2Player.SprintNoPower" );
 		return;
 	}
-
+*/
 	CPASAttenuationFilter filter( this );
 	filter.UsePredictionRules();
-	EmitSound( filter, entindex(), "HL2Player.SprintStart" );
+	EmitSound( filter, entindex(), "HL2Player.SprintStart" ); // BOXBOX TODO set this up for MSS (use diff sounds per gender/race?)
 
-	SetMaxSpeed( HL2_SPRINT_SPEED );
-	m_fIsSprinting = true;
+	SetMaxSpeed( MSS_SPRINT_SPEED );
+	m_bIsSprinting = true; // BOXBOX changed
 }
 
 
@@ -589,19 +599,19 @@ void C_HL2MP_Player::StartSprinting( void )
 //-----------------------------------------------------------------------------
 void C_HL2MP_Player::StopSprinting( void )
 {
-	SetMaxSpeed( HL2_NORM_SPEED );
-	m_fIsSprinting = false;
+	SetMaxSpeed( MSS_NORM_SPEED );
+	m_bIsSprinting = false; // BOXBOX changed
 }
 
-void C_HL2MP_Player::HandleSpeedChanges( void )
+void C_HL2MP_Player::HandleSpeedChanges( void ) // BOXBOX removed HEV suit from this function
 {
 	int buttonsChanged = m_afButtonPressed | m_afButtonReleased;
 
 	if( buttonsChanged & IN_SPEED )
 	{
 		// The state of the sprint/run button has changed.
-		if ( IsSuitEquipped() )
-		{
+//		if ( IsSuitEquipped() )
+//		{
 			if ( !(m_afButtonPressed & IN_SPEED)  && IsSprinting() )
 			{
 				StopSprinting();
@@ -618,43 +628,59 @@ void C_HL2MP_Player::HandleSpeedChanges( void )
 					m_nButtons &= ~IN_SPEED;
 				}
 			}
-		}
+//		}
 	}
-	else if( buttonsChanged & IN_WALK )
+	else if( buttonsChanged & IN_SNEAK )
 	{
-		if ( IsSuitEquipped() )
-		{
+//		if ( IsSuitEquipped() )
+//		{
 			// The state of the WALK button has changed. 
-			if( IsWalking() && !(m_afButtonPressed & IN_WALK) )
+			if( IsSneaking() && !(m_afButtonPressed & IN_SNEAK) )
 			{
-				StopWalking();
+				StopSneaking();
 			}
-			else if( !IsWalking() && !IsSprinting() && (m_afButtonPressed & IN_WALK) && !(m_nButtons & IN_DUCK) )
+			else if (!IsSneaking() && !IsSprinting() && (m_afButtonPressed & IN_SNEAK) && !(m_nButtons & IN_DUCK))
 			{
-				StartWalking();
+				StartSneaking();
 			}
-		}
+//		}
 	}
 
-	if ( IsSuitEquipped() && m_fIsWalking && !(m_nButtons & IN_WALK)  ) 
-		StopWalking();
+	if ( /*IsSuitEquipped() &&*/ m_bIsSneaking && !(m_nButtons & IN_SNEAK)  ) 
+		StopSneaking();
 }
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void C_HL2MP_Player::StartWalking( void )
+void C_HL2MP_Player::StartSneaking(void)
 {
-	SetMaxSpeed( HL2_WALK_SPEED );
-	m_fIsWalking = true;
+	SetMaxSpeed( MSS_SNEAK_SPEED );
+	m_bIsSneaking = true;
 }
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void C_HL2MP_Player::StopWalking( void )
+void C_HL2MP_Player::StopSneaking( void )
 {
-	SetMaxSpeed( HL2_NORM_SPEED );
-	m_fIsWalking = false;
+	SetMaxSpeed( MSS_NORM_SPEED );
+	m_bIsSneaking = false;
 }
+
+
+// BOXBOX added
+
+void C_HL2MP_Player::ExitLadder()
+{
+	if ( MOVETYPE_LADDER != GetMoveType() )
+		return;
+	
+	SetMoveType( MOVETYPE_WALK );
+	SetMoveCollide( MOVECOLLIDE_DEFAULT );
+	// Remove from ladder
+	m_MSSLocal.m_hLadder = NULL;
+}
+
+
 
 void C_HL2MP_Player::ItemPreFrame( void )
 {

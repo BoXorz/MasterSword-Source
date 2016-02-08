@@ -45,7 +45,7 @@ END_DATADESC()
 BEGIN_PREDICTION_DATA( CBaseHL2MPCombatWeapon )
 END_PREDICTION_DATA()
 
-extern ConVar sk_auto_reload_time;
+// extern ConVar sk_auto_reload_time;
 
 CBaseHL2MPCombatWeapon::CBaseHL2MPCombatWeapon( void )
 {
@@ -68,7 +68,7 @@ void CBaseHL2MPCombatWeapon::ItemHolsterFrame( void )
 		return;
 
 	// If it's been longer than three seconds, reload
-	if ( ( gpGlobals->curtime - m_flHolsterTime ) > sk_auto_reload_time.GetFloat() )
+	if ((gpGlobals->curtime - m_flHolsterTime) > 3 ) // BOXBOX was sk_auto_reload_time.GetFloat() )
 	{
 		// Just load the clip with no animations
 		FinishReload();
@@ -111,6 +111,9 @@ bool CBaseHL2MPCombatWeapon::Ready( void )
 //-----------------------------------------------------------------------------
 bool CBaseHL2MPCombatWeapon::Deploy( void )
 {
+
+// BOXBOX removing this
+/*
 	// If we should be lowered, deploy in the lowered position
 	// We have to ask the player if the last time it checked, the weapon was lowered
 	if ( GetOwner() && GetOwner()->IsPlayer() )
@@ -133,7 +136,7 @@ bool CBaseHL2MPCombatWeapon::Deploy( void )
 			}
 		}
 	}
-
+*/
 	m_bLowered = false;
 	return BaseClass::Deploy();
 }
@@ -219,8 +222,8 @@ void CBaseHL2MPCombatWeapon::WeaponIdle( void )
 #define	HL2_BOB			0.002f
 #define	HL2_BOB_UP		0.5f
 
-extern float	g_lateralBob;
-extern float	g_verticalBob;
+float	g_lateralBob; // BOXBOX removed extern from these
+float	g_verticalBob;
 
 static ConVar	cl_bobcycle( "cl_bobcycle","0.8" );
 static ConVar	cl_bob( "cl_bob","0.002" );

@@ -12,8 +12,11 @@
 class CHL2MP_Player;
 
 #include "basemultiplayerplayer.h"
-#include "hl2_playerlocaldata.h"
-#include "hl2_player.h"
+
+// BOXBOX changing lines below
+#include "MSS_playerlocaldata.h"
+//#include "hl2_player.h"
+
 #include "simtimer.h"
 #include "soundenvelope.h"
 #include "hl2mp_player_shared.h"
@@ -35,10 +38,10 @@ public:
 	void (CHL2MP_Player::*pfnPreThink)();	// Do a PreThink() in this state.
 };
 
-class CHL2MP_Player : public CHL2_Player
+class CHL2MP_Player : public CBasePlayer	// BOXBOX was CHL2_Player
 {
 public:
-	DECLARE_CLASS( CHL2MP_Player, CHL2_Player );
+	DECLARE_CLASS(CHL2MP_Player, CBasePlayer);
 
 	CHL2MP_Player();
 	~CHL2MP_Player( void );
@@ -137,8 +140,24 @@ public:
 
 	virtual bool	CanHearAndReadChatFrom( CBasePlayer *pPlayer );
 
-		
+	// BOXBOX MSS stuff
+	
+	CNetworkVarEmbedded(CMSSPlayerLocalData, m_MSSLocal);
+
+	LadderMove_t		*GetLadderMove() { return &m_MSSLocal.m_LadderMove; }
+	virtual void		ExitLadder();
+	virtual surfacedata_t *GetLadderSurface( const Vector &origin );
+
+	bool				m_bPlayUseDenySound;
+
+	bool	IsSprinting(void) { return m_bIsSprinting; }
+
 private:
+
+	CNetworkVar(bool, m_bIsSprinting);
+	CNetworkVarForDerived(bool, m_bIsSneaking);
+
+// BOXBOX END MSS STUFF
 
 	CNetworkQAngle( m_angEyeAngles );
 	CPlayerAnimState   m_PlayerAnimState;
@@ -163,6 +182,10 @@ private:
 
     bool m_bEnterObserver;
 	bool m_bReady;
+
+	// BOXBOX MSS stuff
+	
+	
 };
 
 inline CHL2MP_Player *ToHL2MPPlayer( CBaseEntity *pEntity )

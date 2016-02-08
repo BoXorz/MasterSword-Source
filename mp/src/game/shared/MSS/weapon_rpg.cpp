@@ -31,7 +31,7 @@
 	#include "triggers.h"
 	#include "smoke_trail.h"
 	#include "collisionutils.h"
-	#include "hl2_shareddefs.h"
+//	#include "hl2_shareddefs.h"	// BOXBOX removed
 #endif
 
 #include "debugoverlay_shared.h"
@@ -214,8 +214,9 @@ unsigned int CMissile::PhysicsSolidMaskForEntity( void ) const
 //---------------------------------------------------------
 int CMissile::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 {
-	if ( ( info.GetDamageType() & (DMG_MISSILEDEFENSE | DMG_AIRBOAT) ) == false )
-		return 0;
+// BOXBOX removing
+//	if ( ( info.GetDamageType() & (DMG_MISSILEDEFENSE | DMG_AIRBOAT) ) == false )
+//		return 0;
 
 	bool bIsDamaged;
 	if( m_iHealth <= AugerHealth() )

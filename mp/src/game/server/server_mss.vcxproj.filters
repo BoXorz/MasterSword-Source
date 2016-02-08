@@ -13,6 +13,7 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{BA03E055-4FA2-FCE3-8A1C-D348547D379C}</UniqueIdentifier>
     </Filter>
+<<<<<<< HEAD
     <Filter Include="Source Files\HL2 DLL">
       <UniqueIdentifier>{3C43D38A-46AF-2183-A5E5-44383B1D2652}</UniqueIdentifier>
     </Filter>
@@ -25,6 +26,11 @@
     <Filter Include="Source Files\MSS\Monsters">
       <UniqueIdentifier>{FBB22651-C2B5-8981-0EE0-2DDB33313186}</UniqueIdentifier>
     </Filter>
+=======
+    <Filter Include="Source Files\MSS">
+      <UniqueIdentifier>{D2940245-ECD4-0DF9-1C92-F6622B25F151}</UniqueIdentifier>
+    </Filter>
+>>>>>>> parent of 2371c5c... Revert "hl strip"
     <Filter Include="Source Files\MSS\Weapons">
       <UniqueIdentifier>{02F5D287-0857-4311-D27D-F604E60865D5}</UniqueIdentifier>
     </Filter>
@@ -1544,6 +1550,7 @@
     <ClInclude Include="world.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+<<<<<<< HEAD
     <ClInclude Include="hl2\ai_behavior_actbusy.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
@@ -1733,6 +1740,8 @@
     <ClInclude Include="hl2\weapon_flaregun.h">
       <Filter>Source Files\HL2 DLL\unused</Filter>
     </ClInclude>
+=======
+>>>>>>> parent of 2371c5c... Revert "hl strip"
     <ClInclude Include="MSS\hl2mp_bot_temp.h">
       <Filter>Source Files\MSS</Filter>
     </ClInclude>
@@ -1829,6 +1838,18 @@
     <ClInclude Include="toolframework_server.h">
       <Filter>Tools Framework</Filter>
     </ClInclude>
+<<<<<<< HEAD
+=======
+    <ClInclude Include="..\shared\MSS\MSS_movedata.h">
+      <Filter>Source Files\MSS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\MSS\MSS_gamemovement.h">
+      <Filter>Source Files\MSS</Filter>
+    </ClInclude>
+    <ClInclude Include="MSS\MSS_playerlocaldata.h">
+      <Filter>Source Files\MSS</Filter>
+    </ClInclude>
+>>>>>>> parent of 2371c5c... Revert "hl strip"
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gamedll_replay.cpp">
@@ -2944,6 +2965,7 @@
     <ClCompile Include="world.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+<<<<<<< HEAD
     <ClCompile Include="hl2\ai_allymanager.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
@@ -3274,6 +3296,8 @@
     <ClCompile Include="hl2\weapon_flaregun.cpp">
       <Filter>Source Files\HL2 DLL\unused</Filter>
     </ClCompile>
+=======
+>>>>>>> parent of 2371c5c... Revert "hl strip"
     <ClCompile Include="MSS\hl2mp_bot_temp.cpp">
       <Filter>Source Files\MSS</Filter>
     </ClCompile>
@@ -3559,6 +3583,24 @@
     <ClCompile Include="toolframework_server.cpp">
       <Filter>Tools Framework</Filter>
     </ClCompile>
+<<<<<<< HEAD
+=======
+    <ClCompile Include="..\shared\MSS\MSS_gamemovement.cpp">
+      <Filter>Source Files\MSS</Filter>
+    </ClCompile>
+    <ClCompile Include="MSS\MSS_playerlocaldata.cpp">
+      <Filter>Source Files\MSS</Filter>
+    </ClCompile>
+    <ClCompile Include="MSS\MSS_playermove.cpp">
+      <Filter>Source Files\MSS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\MSS\MSS_usermessages.cpp">
+      <Filter>Source Files\MSS</Filter>
+    </ClCompile>
+    <ClCompile Include="MSS\MSS_eventlog.cpp">
+      <Filter>Source Files\MSS</Filter>
+    </ClCompile>
+>>>>>>> parent of 2371c5c... Revert "hl strip"
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
@@ -3614,4 +3656,8 @@
       <Filter>VPC Scripts</Filter>
     </None>
   </ItemGroup>
+<<<<<<< HEAD
 </Project>
+=======
+</Project>
+>>>>>>> parent of 2371c5c... Revert "hl strip"

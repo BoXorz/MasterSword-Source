@@ -474,8 +474,11 @@ CWeaponHL2MPBase* IsManagedObjectAWeapon( CBaseEntity *pObject )
 
 bool GetObjectsOriginalParameters( CBaseEntity *pObject, Vector &vOriginalOrigin, QAngle &vOriginalAngles )
 {
+// BOXBOX removing
+/*
 	if ( CItem *pItem = IsManagedObjectAnItem( pObject ) )
 	{
+
 		if ( pItem->m_flNextResetCheckTime > gpGlobals->curtime )
 			 return false;
 		
@@ -496,7 +499,7 @@ bool GetObjectsOriginalParameters( CBaseEntity *pObject, Vector &vOriginalOrigin
 		pWeapon->m_flNextResetCheckTime = gpGlobals->curtime + sv_hl2mp_weapon_respawn_time.GetFloat();
 		return true;
 	}
-
+*/
 	return false;
 }
 

@@ -14,7 +14,7 @@
 #else
 	#include "hl2mp_player.h"
 	#include "te_effect_dispatch.h"
-	#include "prop_combine_ball.h"
+//	#include "prop_combine_ball.h" // BOXBOX removing
 #endif
 
 #include "weapon_ar2.h"
@@ -185,6 +185,8 @@ void CWeaponAR2::DelayedAttack( void )
 	// Fire the bullets
 	Vector vecVelocity = vecAiming * 1000.0f;
 
+// BOXBOX removing
+/*
 #ifndef CLIENT_DLL
 	// Fire the combine ball
 	CreateCombineBall(	vecSrc, 
@@ -198,7 +200,7 @@ void CWeaponAR2::DelayedAttack( void )
 	color32 white = {255, 255, 255, 64};
 	UTIL_ScreenFade( pOwner, white, 0.1, 0, FFADE_IN  );
 #endif
-	
+*/	
 	//Disorient the player
 	QAngle angles = pOwner->GetLocalAngles();
 

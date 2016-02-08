@@ -40,12 +40,14 @@ public:
 	CMissile();
 	~CMissile();
 
+// BOXBOX removing
+/*
 #ifdef HL1_DLL
 	Class_T Classify( void ) { return CLASS_NONE; }
 #else
 	Class_T Classify( void ) { return CLASS_MISSILE; }
 #endif
-	
+*/	
 	void	Spawn( void );
 	void	Precache( void );
 	void	MissileTouch( CBaseEntity *pOther );

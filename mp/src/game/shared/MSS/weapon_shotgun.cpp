@@ -20,7 +20,7 @@
 #define CWeaponShotgun C_WeaponShotgun
 #endif
 
-extern ConVar sk_auto_reload_time;
+// extern ConVar sk_auto_reload_time;
 extern ConVar sk_plr_num_shotgun_pellets;
 
 class CWeaponShotgun : public CBaseHL2MPCombatWeapon
@@ -594,7 +594,7 @@ void CWeaponShotgun::ItemHolsterFrame( void )
 		return;
 
 	// If it's been longer than three seconds, reload
-	if ( ( gpGlobals->curtime - m_flHolsterTime ) > sk_auto_reload_time.GetFloat() )
+	if ((gpGlobals->curtime - m_flHolsterTime) > 3 ) // BOXBOX was sk_auto_reload_time.GetFloat() )
 	{
 		// Reset the timer
 		m_flHolsterTime = gpGlobals->curtime;

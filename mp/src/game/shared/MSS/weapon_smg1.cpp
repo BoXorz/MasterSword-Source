@@ -11,7 +11,7 @@
 #ifdef CLIENT_DLL
 	#include "c_hl2mp_player.h"
 #else
-	#include "grenade_ar2.h"
+//	#include "grenade_ar2.h"
 	#include "hl2mp_player.h"
 	#include "basegrenade_shared.h"
 #endif
@@ -219,6 +219,8 @@ void CWeaponSMG1::SecondaryAttack( void )
 	AngleVectors( pPlayer->EyeAngles() + pPlayer->GetPunchAngle(), &vecThrow );
 	VectorScale( vecThrow, 1000.0f, vecThrow );
 	
+// BOXBOX removing
+/*
 #ifndef CLIENT_DLL
 	//Create the grenade
 	CGrenadeAR2 *pGrenade = (CGrenadeAR2*)Create( "grenade_ar2", vecSrc, vec3_angle, pPlayer );
@@ -230,7 +232,7 @@ void CWeaponSMG1::SecondaryAttack( void )
 	pGrenade->SetDamage( SMG1_GRENADE_DAMAGE );
 	pGrenade->SetDamageRadius( SMG1_GRENADE_RADIUS );
 #endif
-
+*/
 	SendWeaponAnim( ACT_VM_SECONDARYATTACK );
 
 	// player "shoot" animation

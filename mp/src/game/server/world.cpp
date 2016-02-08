@@ -36,7 +36,7 @@
 #include "tier0/memdbgon.h"
 
 extern CBaseEntity				*g_pLastSpawn;
-void InitBodyQue(void);
+// void InitBodyQue(void); // BOXBOX TODO find out what this is for.
 extern void W_Precache(void);
 extern void ActivityList_Free( void );
 extern CUtlMemoryPool g_EntityListPool;
@@ -616,7 +616,7 @@ void CWorld::Precache( void )
 	EventList_Free();
 	RegisterSharedEvents();
 
-	InitBodyQue();
+//	InitBodyQue();
 // init sentence group playback stuff from sentences.txt.
 // ok to call this multiple times, calls after first are ignored.
 

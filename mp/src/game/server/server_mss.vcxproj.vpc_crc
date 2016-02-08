@@ -1,7 +1,11 @@
 [vpc crc file version 2]
 b9c20ec3 C:\Users\BoX\Documents\GitHub\MasterSword-Source\mp\src\devtools\bin\vpc.exe
 _Nc_VS2013/vpcgame:mss_
+<<<<<<< HEAD
 32289ec5 server_MSS.vpc
+=======
+0062202b server_MSS.vpc
+>>>>>>> parent of 2371c5c... Revert "hl strip"
 cd2921c2 ..\..\game\server\server_base.vpc
 4832e67a ..\..\vpc_scripts\source_dll_base.vpc
 d752cf80 ..\..\vpc_scripts\platform_dirs.vpc

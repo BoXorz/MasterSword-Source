@@ -43,11 +43,14 @@ LINK_ENTITY_TO_CLASS( info_player_combine, CPointEntity );
 LINK_ENTITY_TO_CLASS( info_player_rebel, CPointEntity );
 
 IMPLEMENT_SERVERCLASS_ST(CHL2MP_Player, DT_HL2MP_Player)
+	SendPropDataTable(SENDINFO_DT(m_MSSLocal), &REFERENCE_SEND_TABLE(DT_MSSLocal), SendProxy_SendLocalDataTable), // BOXBOX added
 	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 0), 11, SPROP_CHANGES_OFTEN ),
 	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 11, SPROP_CHANGES_OFTEN ),
 	SendPropEHandle( SENDINFO( m_hRagdoll ) ),
 	SendPropInt( SENDINFO( m_iSpawnInterpCounter), 4 ),
 	SendPropInt( SENDINFO( m_iPlayerSoundType), 3 ),
+	SendPropBool( SENDINFO(m_bIsSprinting) ),	// BOXBOX added
+	SendPropBool( SENDINFO(m_bIsSneaking) ),		// BOXBOX TODO finish setting up sneaking.  ( changed 'walking' to 'sneaking' )
 	
 	SendPropExclude( "DT_BaseAnimating", "m_flPoseParameter" ),
 	SendPropExclude( "DT_BaseFlex", "m_viewtarget" ),
@@ -57,7 +60,24 @@ IMPLEMENT_SERVERCLASS_ST(CHL2MP_Player, DT_HL2MP_Player)
 	
 END_SEND_TABLE()
 
+// BOXBOX added
+BEGIN_SIMPLE_DATADESC( LadderMove_t )
+	DEFINE_FIELD( m_bForceLadderMove, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_bForceMount, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_flStartTime, FIELD_TIME ),
+	DEFINE_FIELD( m_flArrivalTime, FIELD_TIME ),
+	DEFINE_FIELD( m_vecGoalPosition, FIELD_POSITION_VECTOR ),
+	DEFINE_FIELD( m_vecStartPosition, FIELD_POSITION_VECTOR ),
+	DEFINE_FIELD( m_hForceLadder, FIELD_EHANDLE ),
+	DEFINE_FIELD( m_hReservedSpot, FIELD_EHANDLE ),
+END_DATADESC()
+
 BEGIN_DATADESC( CHL2MP_Player )
+	DEFINE_EMBEDDED( m_MSSLocal ),
+
+//	DEFINE_FIELD( m_bSprintEnabled, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_bIsSprinting, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_bIsSneaking, FIELD_BOOLEAN ),
 END_DATADESC()
 
 const char *g_ppszRandomCitizenModels[] = 
@@ -136,6 +156,7 @@ void CHL2MP_Player::Precache( void )
 	BaseClass::Precache();
 
 	PrecacheModel ( "sprites/glow01.vmt" );
+
 
 	//Precache Citizen models
 	int nHeads = ARRAYSIZE( g_ppszRandomCitizenModels );
@@ -669,7 +690,7 @@ Activity CHL2MP_Player::TranslateTeamActivity( Activity ActToTranslate )
 	return ActToTranslate;
 }
 
-extern ConVar hl2_normspeed;
+// extern ConVar hl2_normspeed; // BOXBOX removing
 
 // Set the activity based on an event or current state
 void CHL2MP_Player::SetAnimation( PLAYER_ANIM playerAnim )
@@ -1262,7 +1283,9 @@ void CHL2MP_Player::Event_Killed( const CTakeDamageInfo &info )
 	m_lifeState = LIFE_DEAD;
 
 	RemoveEffects( EF_NODRAW );	// still draw player body
-	StopZooming();
+
+// BOXBOX TODO set up zooming via magic?
+//	StopZooming();
 }
 
 int CHL2MP_Player::OnTakeDamage( const CTakeDamageInfo &inputInfo )
@@ -1627,3 +1650,32 @@ bool CHL2MP_Player::CanHearAndReadChatFrom( CBasePlayer *pPlayer )
 
 	return true;
 }
+
+// BOXBOX MSS stuff
+
+void CHL2MP_Player::ExitLadder()
+{
+	if (MOVETYPE_LADDER != GetMoveType())
+		return;
+
+	SetMoveType(MOVETYPE_WALK);
+	SetMoveCollide(MOVECOLLIDE_DEFAULT);
+	// Remove from ladder
+	m_MSSLocal.m_hLadder.Set(NULL);
+}
+
+surfacedata_t *CHL2MP_Player::GetLadderSurface( const Vector &origin )
+{
+	extern const char *FuncLadder_GetSurfaceprops(CBaseEntity *pLadderEntity);
+
+	CBaseEntity *pLadder = m_MSSLocal.m_hLadder.Get();
+	if ( pLadder )
+	{
+		const char *pSurfaceprops = FuncLadder_GetSurfaceprops(pLadder);
+		// get ladder material from func_ladder
+		return physprops->GetSurfaceData( physprops->GetSurfaceIndex( pSurfaceprops ) );
+
+	}
+	return BaseClass::GetLadderSurface(origin);
+}
+

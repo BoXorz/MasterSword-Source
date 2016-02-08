@@ -133,7 +133,7 @@ void CTeamPlayHud::OnThink()
 {
 	SetVisible( false );
 
-	C_BaseHLPlayer *pLocalPlayer = (C_BaseHLPlayer *)C_BasePlayer::GetLocalPlayer();
+	C_BasePlayer *pLocalPlayer = (C_BasePlayer *)C_BasePlayer::GetLocalPlayer();
 
 	if ( pLocalPlayer == NULL )
 		 return;
@@ -144,6 +144,8 @@ void CTeamPlayHud::OnThink()
 	if ( pLocalPlayer->IsAlive() == false )
 		 return;
 
+// BOXBOX removing
+/*
 	if ( pLocalPlayer->m_HL2Local.m_flSuitPower < 100 )
 	{
 		if ( m_bSuitAuxPowerUsed == false )
@@ -160,7 +162,7 @@ void CTeamPlayHud::OnThink()
 			m_bSuitAuxPowerUsed = false;
 		}
 	}
-	
+*/	
 	int iTeamNumber = pLocalPlayer->GetTeamNumber();
 	Color c = GameResources()->GetTeamColor( iTeamNumber );
 

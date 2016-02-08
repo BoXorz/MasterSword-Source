@@ -64,10 +64,11 @@ ConVar physcannon_cone( "physcannon_cone", "0.97", FCVAR_REPLICATED | FCVAR_CHEA
 ConVar physcannon_ball_cone( "physcannon_ball_cone", "0.997", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar player_throwforce( "player_throwforce", "1000", FCVAR_REPLICATED | FCVAR_CHEAT );
 
-#ifndef CLIENT_DLL
-extern ConVar hl2_normspeed;
-extern ConVar hl2_walkspeed;
-#endif
+// BOXBOX removing
+//#ifndef CLIENT_DLL
+//extern ConVar hl2_normspeed;
+//extern ConVar hl2_walkspeed;
+//#endif
 
 #define PHYSCANNON_BEAM_SPRITE "sprites/orangelight1.vmt"
 #define PHYSCANNON_BEAM_SPRITE_NOZ "sprites/orangelight1_noz.vmt"
@@ -628,7 +629,8 @@ void CGrabController::DetachEntity( bool bClearVelocity )
 			else
 			{
 #ifndef CLIENT_DLL
-				ClampPhysicsVelocity( pPhys, hl2_normspeed.GetFloat() * 1.5f, 2.0f * 360.0f );
+//				ClampPhysicsVelocity( pPhys, hl2_normspeed.GetFloat() * 1.5f, 2.0f * 360.0f );
+				ClampPhysicsVelocity(pPhys, 160 * 1.5f, 2.0f * 360.0f);
 #endif
 			}
 
@@ -759,13 +761,14 @@ void CPlayerPickupController::Init( CBasePlayer *pPlayer, CBaseEntity *pObject )
 		}
 	}
 
-
+// BOXBOX removing
+/*
 	CHL2MP_Player *pOwner = (CHL2MP_Player *)ToBasePlayer( pPlayer );
 	if ( pOwner )
 	{
 		pOwner->EnableSprint( false );
 	}
-
+*/
 	// If the target is debris, convert it to non-debris
 	if ( pObject->GetCollisionGroup() == COLLISION_GROUP_DEBRIS )
 	{
@@ -813,12 +816,15 @@ void CPlayerPickupController::Shutdown( bool bThrown )
 
 	if ( m_pPlayer )
 	{
+
+// BOXBOX removing
+/*
 		CHL2MP_Player *pOwner = (CHL2MP_Player *)ToBasePlayer( m_pPlayer );
 		if ( pOwner )
 		{
 			pOwner->EnableSprint( true );
 		}
-
+*/
 		m_pPlayer->SetUseEntity( NULL );
 		if ( m_pPlayer->GetActiveWeapon() )
 		{
@@ -2375,13 +2381,15 @@ void CWeaponPhysCannon::DetachObject( bool playSound, bool wasLaunched )
 	if ( m_bActive == false )
 		return;
 
+// BOXBOX removing
+
 	CHL2MP_Player *pOwner = (CHL2MP_Player *)ToBasePlayer( GetOwner() );
-	if( pOwner != NULL )
+/*	if( pOwner != NULL )
 	{
 		pOwner->EnableSprint( true );
 		pOwner->SetMaxSpeed( hl2_normspeed.GetFloat() );
 	}
-
+*/
 	CBaseEntity *pObject = m_grabController.GetAttached();
 
 	m_grabController.DetachEntity( wasLaunched );
@@ -2766,7 +2774,7 @@ void CWeaponPhysCannon::LaunchObject( const Vector &vecDir, float flForce )
 	m_flCheckSuppressTime = gpGlobals->curtime + 0.25f;
 }
 
-bool UTIL_IsCombineBall( CBaseEntity *pEntity );
+// bool UTIL_IsCombineBall( CBaseEntity *pEntity ); // BOXBOX removed
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -2798,10 +2806,11 @@ bool CWeaponPhysCannon::CanPickupObject( CBaseEntity *pTarget )
 	if ( pObj && pObj->GetGameFlags() & FVPHYSICS_PLAYER_HELD )
 		return false;
 
-	if ( UTIL_IsCombineBall( pTarget ) )
-	{
-		return CBasePlayer::CanPickupObject( pTarget, 0, 0 );
-	}
+// BOXBOX removed
+//	if ( UTIL_IsCombineBall( pTarget ) )
+//	{
+//		return CBasePlayer::CanPickupObject( pTarget, 0, 0 );
+//	}
 
 	return CBasePlayer::CanPickupObject( pTarget, physcannon_maxmass.GetFloat(), 0 );
 #else

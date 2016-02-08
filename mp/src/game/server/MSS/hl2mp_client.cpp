@@ -140,6 +140,7 @@ CBaseEntity* FindEntity( edict_t *pEdict, char *classname)
 void ClientGamePrecache( void )
 {
 	CBaseEntity::PrecacheModel("models/player.mdl");
+	CBaseEntity::PrecacheModel("models/Combine_Soldier.mdl"); // BOXBOX added
 	CBaseEntity::PrecacheModel( "models/gibs/agibs.mdl" );
 	CBaseEntity::PrecacheModel ("models/weapons/v_hands.mdl");
 
